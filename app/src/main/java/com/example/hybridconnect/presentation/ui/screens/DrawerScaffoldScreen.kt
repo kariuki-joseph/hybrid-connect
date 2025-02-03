@@ -51,13 +51,6 @@ fun DrawerScaffoldScreen(
 
     val items = listOf(
         DrawerItem.Home,
-        DrawerItem.Offers,
-        DrawerItem.QuickDial,
-        DrawerItem.SiteLink,
-        DrawerItem.Subscription,
-        DrawerItem.AutoReply,
-        DrawerItem.Customers,
-        DrawerItem.HybridConnect,
         DrawerItem.Settings,
     )
 
@@ -91,10 +84,14 @@ fun DrawerScaffoldScreen(
         }
     })
 
-    LogoutConfirmationDialog(showDialog = showLogoutDialog, isLoggingOut = false, onConfirm = {
-        showLogoutDialog = false
-        onLogout()
-    }, onDismiss = { showLogoutDialog = false })
+    LogoutConfirmationDialog(
+        showDialog = showLogoutDialog,
+        isLoggingOut = false,
+        onConfirm = {
+            showLogoutDialog = false
+            onLogout()
+        },
+        onDismiss = { showLogoutDialog = false })
 }
 
 
@@ -194,36 +191,8 @@ fun handleDrawerItemClick(
             navController.navigate(Route.Home.name)
         }
 
-        is DrawerItem.Offers -> {
-            navController.navigate(Route.Offers.name)
-        }
-
         is DrawerItem.Settings -> {
             navController.navigate(Route.Settings.name)
-        }
-
-        is DrawerItem.Customers -> {
-            navController.navigate(Route.Customers.name)
-        }
-
-        is DrawerItem.QuickDial -> {
-            navController.navigate(Route.QuickDial.name)
-        }
-
-        is DrawerItem.SiteLink -> {
-            navController.navigate(Route.SiteLink.name)
-        }
-
-        is DrawerItem.AutoReply -> {
-            navController.navigate(Route.AutoReply.name)
-        }
-
-        is DrawerItem.Subscription -> {
-            navController.navigate(Route.MySubscription.name)
-        }
-
-        is DrawerItem.HybridConnect -> {
-            navController.navigate(Route.HybridConnect.name)
         }
 
         else -> {

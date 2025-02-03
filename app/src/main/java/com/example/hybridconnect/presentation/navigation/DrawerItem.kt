@@ -17,13 +17,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 
 sealed class DrawerItem(val title: String, val icon: ImageVector) {
     data object Home : DrawerItem("Home", Icons.Outlined.Home)
-    data object Offers : DrawerItem("Offers", Icons.Outlined.LocalOffer)
-    data object Customers : DrawerItem("Customer Balances", Icons.Outlined.People)
     data object Settings : DrawerItem("Settings", Icons.Outlined.Settings)
-    data object QuickDial : DrawerItem("Quick Dial", Icons.Outlined.Dialpad)
-    data object SiteLink : DrawerItem("Site Link", Icons.Outlined.Link)
-    data object AutoReply : DrawerItem("AutoReplies", Icons.AutoMirrored.Outlined.ForwardToInbox)
-    data object Subscription : DrawerItem("Subscriptions", Icons.Outlined.Subscriptions)
-    data object HybridConnect : DrawerItem("Hybrid Connect", Icons.Outlined.LeakAdd)
     data object Logout : DrawerItem("Logout", Icons.AutoMirrored.Outlined.Logout)
 }

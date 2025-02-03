@@ -64,11 +64,8 @@ class MainActivity : ComponentActivity() {
 
     private fun requestPermissions(activity: Activity) {
         val permissions = arrayListOf(
-            android.Manifest.permission.CALL_PHONE,
-            android.Manifest.permission.READ_PHONE_STATE,
             android.Manifest.permission.READ_SMS,
             android.Manifest.permission.RECEIVE_SMS,
-            android.Manifest.permission.SEND_SMS,
         )
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {

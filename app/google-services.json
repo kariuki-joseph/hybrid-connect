@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "867815692371",
+    "project_id": "bingwa-hybrid-4d3c2",
+    "storage_bucket": "bingwa-hybrid-4d3c2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:867815692371:android:7c3020346c1d698f2d8ea6",
+        "android_client_info": {
+          "package_name": "com.example.hybridconnect"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDGpnfwkqwz_kQIoD2L2TZrZjvkN_QWhGc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

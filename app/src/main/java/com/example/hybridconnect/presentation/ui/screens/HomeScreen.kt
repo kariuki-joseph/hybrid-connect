@@ -7,13 +7,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.AddBox
+import androidx.compose.material.icons.filled.Wifi
+import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -34,17 +33,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
-import com.example.hybridconnect.domain.enums.SubscriptionType
 import com.example.hybridconnect.domain.utils.SnackbarManager
-import com.example.hybridconnect.presentation.enums.StatisticsBoxType
 import com.example.hybridconnect.presentation.navigation.Route
-import com.example.hybridconnect.presentation.ui.components.StatisticsBox
-import com.example.hybridconnect.presentation.ui.components.StatisticsGraph
-import com.example.hybridconnect.presentation.ui.components.TransactionList
 import com.example.hybridconnect.presentation.viewmodel.HomeViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.util.Locale
 
 @Composable
 fun HomeScreen(
@@ -53,40 +46,9 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val scope = rememberCoroutineScope()
-    val transactions by viewModel.transactions.collectAsState()
     val agentFirstName by viewModel.agentFirstName.collectAsState()
     val greetings by viewModel.greetings.collectAsState()
-    val successCount by viewModel.successCount.collectAsState()
-    val failedCount by viewModel.failedCount.collectAsState()
     val isAppActive by viewModel.isAppActive.collectAsState()
-    val subscriptionLimit by viewModel.subscriptionLimit.collectAsState()
-    val activeSubscriptionType by viewModel.activeSubscriptionType.collectAsState()
-    val agentCommissions by viewModel.agentCommissions.collectAsState()
-
-    val remainingTime = remember(subscriptionLimit, activeSubscriptionType) {
-        when (activeSubscriptionType) {
-            SubscriptionType.UNLIMITED -> {
-                if (subscriptionLimit > 0) {
-                    val totalHours = subscriptionLimit / (1000 * 60 * 60)
-                    val minutes = (subscriptionLimit / (1000 * 60)) % 60
-
-                    if (totalHours >= 24) {
-                        val days = totalHours / 24
-                        val hours = totalHours % 24
-                        String.format(Locale.getDefault(), "%dd %02dh", days, hours)
-                    } else {
-                        String.format(Locale.getDefault(), "%02dh %02dmin", totalHours, minutes)
-                    }
-                } else {
-                    "Expired"
-                }
-            }
-
-            SubscriptionType.LIMITED -> subscriptionLimit.toString()
-            else -> "Expired"
-        }
-    }
-
 
     var showStopAppWarningDialog by remember { mutableStateOf(false) }
     val logoutSuccess by viewModel.logoutSuccess.collectAsState()
@@ -111,7 +73,7 @@ fun HomeScreen(
     }
 
     Box(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
     ) {
         DrawerScaffoldScreen(
@@ -120,81 +82,42 @@ fun HomeScreen(
             onLogout = { viewModel.logoutUser() }
         ) {
             Column(
-                modifier = modifier
+                modifier = Modifier
                     .fillMaxHeight()
             ) {
-                Row(
-                    modifier = modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(
-                        28.dp,
-                        Alignment.CenterHorizontally
-                    ),
-                ) {
-                    StatisticsBox(
-                        label = "Successful",
-                        value = successCount.toString(),
-                        boxType = StatisticsBoxType.SUCCESSFUL
-                    )
-                    StatisticsBox(
-                        label = "Failed",
-                        value = failedCount.toString(),
-                        boxType = StatisticsBoxType.FAILED
-                    )
-
-                    StatisticsBox(
-                        label = "Tokens",
-                        value = remainingTime,
-                        boxType = StatisticsBoxType.TOKENS,
-                        onClick = {
-                            navController.navigate(Route.MySubscription.name)
-                        }
-                    )
-                }
-                Row(
-                    modifier = Modifier
-                        .padding(horizontal = 15.dp, vertical = 8.dp)
-                        .fillMaxWidth()
-                        .height(150.dp),
-                ) {
-                    StatisticsGraph(
-                        agentCommissions = agentCommissions
-                    )
-                }
-                Row(
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 8.dp),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = "All",
-                        style = MaterialTheme.typography.bodySmall.copy(
+                        text = "Connected Apps",
+                        style = MaterialTheme.typography.titleMedium.copy(
                             color = MaterialTheme.colorScheme.secondary
                         ),
+                        modifier = Modifier.align(Alignment.Center)
                     )
-                    IconButton(
-                        onClick = {
-                            navController.navigate(Route.Transactions.name)
-                        }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.CenterEnd),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.End
                     ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                            contentDescription = "All Transactions",
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier
-                                .padding(8.dp)
-                                .width(40.dp)
-                        )
+                        IconButton(
+                            onClick = {
+                                navController.navigate(Route.AddConnectedApp.name)
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.AddBox,
+                                contentDescription = "Add App",
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
                     }
                 }
-                TransactionList(transactions = transactions,
-                    onTransactionClick = {
-                        navController.navigate("transactions/${it.id}")
-                    },
-                    onRetry = { transaction -> viewModel.retryTransaction(transaction) }
-                )
             }
         }
 
@@ -210,10 +133,10 @@ fun HomeScreen(
                 .align(Alignment.BottomEnd)
                 .padding(bottom = 32.dp, end = 32.dp)
         ) {
-            Icon(
-                imageVector = if (isAppActive) Icons.Default.Stop else Icons.Default.PlayArrow,
-                contentDescription = if (isAppActive) "Stop App" else "Start App"
-            )
+           Icon(
+               imageVector = if (isAppActive) Icons.Default.Wifi else Icons.Default.WifiOff,
+               contentDescription = if (isAppActive) "Wifi Off" else "Wifi On"
+           )
         }
     }
 

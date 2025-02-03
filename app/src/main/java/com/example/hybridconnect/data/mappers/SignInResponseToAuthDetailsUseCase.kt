@@ -7,6 +7,5 @@ fun SignInResponse.toAuthDetails(): AuthDetails {
     return AuthDetails(
         token = this.token,
         agent = this.agent.toDomain(),
-        siteLink = this.siteLink?.toDomain()
     )
 }

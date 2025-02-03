@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -94,9 +95,7 @@ fun DrawerScaffoldScreen(
         onDismiss = { showLogoutDialog = false })
 }
 
-
 @Composable
-
 fun AppDrawer(
     items: List<DrawerItem>,
     navController: NavHostController,
@@ -109,31 +108,33 @@ fun AppDrawer(
     ) {
         Spacer(modifier = Modifier.height(30.dp))
 
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxHeight()
+                .padding(16.dp)
+        ) {
             Text(
                 text = Constants.APP_NAME,
                 style = androidx.compose.material3.MaterialTheme.typography.headlineLarge,
             )
-        }
 
-        LazyColumn(
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            items(items) { item ->
-                NavigationDrawerItem(label = item.title, icon = item.icon, onClick = {
-                    handleDrawerItemClick(item, navController, closeDrawer)
-                })
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+            ) {
+                items(items) { item ->
+                    NavigationDrawerItem(label = item.title, icon = item.icon, onClick = {
+                        handleDrawerItemClick(item, navController, closeDrawer)
+                    })
+                }
             }
 
-            item {
-                Spacer(modifier = Modifier.height(40.dp))
-                HorizontalDivider()
-                NavigationDrawerItem(
-                    label = DrawerItem.Logout.title,
-                    icon = DrawerItem.Logout.icon,
-                    onClick = onLogout
-                )
-            }
+            Spacer(modifier = Modifier.weight(1f))
+            HorizontalDivider()
+            NavigationDrawerItem(
+                label = DrawerItem.Logout.title,
+                icon = DrawerItem.Logout.icon,
+                onClick = onLogout
+            )
         }
     }
 }

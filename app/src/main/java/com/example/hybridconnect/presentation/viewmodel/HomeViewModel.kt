@@ -5,27 +5,12 @@ import android.content.Intent
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.hybridconnect.domain.enums.TransactionStatus
 import com.example.hybridconnect.domain.enums.AppSetting
-import com.example.hybridconnect.domain.enums.SubscriptionType
-import com.example.hybridconnect.domain.enums.TransactionType
 import com.example.hybridconnect.domain.model.Agent
-import com.example.hybridconnect.domain.model.AgentCommission
-import com.example.hybridconnect.domain.model.SubscriptionPlan
-import com.example.hybridconnect.domain.model.Transaction
 import com.example.hybridconnect.domain.repository.AuthRepository
 import com.example.hybridconnect.domain.repository.PrefsRepository
-import com.example.hybridconnect.domain.repository.SubscriptionPlanRepository
 import com.example.hybridconnect.domain.services.SmsProcessingService
-import com.example.hybridconnect.domain.usecase.DecrementCustomerBalanceUseCase
-import com.example.hybridconnect.domain.usecase.DialUssdUseCase
-import com.example.hybridconnect.domain.usecase.FormatUssdUseCase
-import com.example.hybridconnect.domain.usecase.GetCommissionForDatesUseCase
 import com.example.hybridconnect.domain.usecase.LogoutUserUseCase
-import com.example.hybridconnect.domain.usecase.ObserveTransactionsUseCase
-import com.example.hybridconnect.domain.usecase.RetryTransactionUseCase
-import com.example.hybridconnect.domain.usecase.UpdateTransactionStatusUseCase
-import com.example.hybridconnect.domain.utils.todayRange
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -38,9 +23,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.time.DayOfWeek
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import javax.inject.Inject
 
@@ -49,30 +31,13 @@ private const val TAG = "HomeViewModel"
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val observeTransactionsUseCase: ObserveTransactionsUseCase,
     private val authRepository: AuthRepository,
     private val prefsRepository: PrefsRepository,
-    private val dialUssdUseCase: DialUssdUseCase,
-    private val updateTransactionStatusUseCase: UpdateTransactionStatusUseCase,
-    private val decrementCustomerBalanceUseCase: DecrementCustomerBalanceUseCase,
-    private val formatUssdUseCase: FormatUssdUseCase,
-    private val subscriptionPlanRepository: SubscriptionPlanRepository,
-    private val getCommissionForDatesUseCase: GetCommissionForDatesUseCase,
     private val logoutUserUseCase: LogoutUserUseCase,
-    private val retryTransactionUseCase: RetryTransactionUseCase,
 ) : ViewModel() {
     val isAppActive: StateFlow<Boolean> = prefsRepository.isAppActive
 
     private val agent: StateFlow<Agent?> = authRepository.agent
-
-    private val activePlans: StateFlow<List<SubscriptionPlan>> =
-        subscriptionPlanRepository.activePlansFlow
-
-    private val _activeSubscriptionType = MutableStateFlow<SubscriptionType?>(null)
-    val activeSubscriptionType: StateFlow<SubscriptionType?> = _activeSubscriptionType
-
-    private val _subscriptionLimit = MutableStateFlow(0L)
-    val subscriptionLimit: StateFlow<Long> = _subscriptionLimit.asStateFlow()
 
     private var countdownJob: Job? = null
 
@@ -83,30 +48,6 @@ class HomeViewModel @Inject constructor(
     private val _greetings = MutableStateFlow("Hello")
     val greetings: StateFlow<String> = _greetings.asStateFlow()
 
-    val transactions: StateFlow<List<Transaction>> = observeTransactionsUseCase.transactions
-        .map { list ->
-            list.filter {
-                it.rescheduleInfo?.parentTransactionId == null && it.type != TransactionType.SUBSCRIPTION_RENEWAL && it.status != TransactionStatus.SCHEDULED
-            }
-        }
-        .stateIn(
-            viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList()
-        )
-
-    // Counts for different statuses
-    val successCount: StateFlow<Int> = transactions.map { list ->
-        list.count { it.status == TransactionStatus.SUCCESS && it.time in todayRange() }
-    }.stateIn(viewModelScope, started = SharingStarted.WhileSubscribed(5000), initialValue = 0)
-
-    val failedCount: StateFlow<Int> = transactions.map { list ->
-        list.count { it.status == TransactionStatus.FAILED && it.time in todayRange() }
-    }.stateIn(viewModelScope, started = SharingStarted.WhileSubscribed(5000), initialValue = 0)
-
-    val agentCommissions: StateFlow<List<AgentCommission>> =
-        getCommissionForDatesUseCase.agentCommissions
-
     // logout
     private val _logoutSuccess = MutableStateFlow(false)
     val logoutSuccess: StateFlow<Boolean> = _logoutSuccess
@@ -116,61 +57,8 @@ class HomeViewModel @Inject constructor(
 
     init {
         loadAgent()
-        loadTransactions()
         createGreetings()
         startGreetingTimer()
-        getAgentCommissions()
-        observeActivePlans()
-    }
-
-    private fun loadTransactions() {
-        viewModelScope.launch(Dispatchers.IO) {
-            observeTransactionsUseCase()
-        }
-    }
-
-    private fun observeActivePlans() {
-        viewModelScope.launch {
-            subscriptionPlanRepository.getActivePlans()
-            activePlans.collect { plans ->
-                // Prioritize UNLIMITED subscriptions if available
-                val unlimitedPlan =
-                    plans.firstOrNull { it.type == SubscriptionType.UNLIMITED && it.limit > System.currentTimeMillis() }
-                if (unlimitedPlan != null) {
-                    _activeSubscriptionType.value = SubscriptionType.UNLIMITED
-                    startCountdownTimer(unlimitedPlan.limit)
-                } else {
-                    stopCountdownTimer()
-                    // Fallback to LIMITED subscriptions
-                    val limitedPlan =
-                        plans.firstOrNull { it.type == SubscriptionType.LIMITED && it.limit > 0 }
-                    if (limitedPlan != null) {
-                        _activeSubscriptionType.value = SubscriptionType.LIMITED
-                        _subscriptionLimit.value = limitedPlan.limit
-                    } else {
-                        _activeSubscriptionType.value = null
-                        _subscriptionLimit.value = 0L
-                    }
-                }
-            }
-        }
-    }
-
-    private fun startCountdownTimer(limit: Long) {
-        stopCountdownTimer()
-        countdownJob = viewModelScope.launch {
-            while (true) {
-                val remainingTime = limit - System.currentTimeMillis()
-                if (remainingTime <= 0) {
-                    _subscriptionLimit.value = 0L
-                    stopCountdownTimer()
-                    break
-                } else {
-                    _subscriptionLimit.value = remainingTime
-                }
-                delay(1000L) // Update every second
-            }
-        }
     }
 
     private fun stopCountdownTimer() {
@@ -205,22 +93,6 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private fun getAgentCommissions() {
-        viewModelScope.launch(Dispatchers.IO) {
-            getCommissionForDatesUseCase(getCurrentWeekDates())
-        }
-    }
-
-    private fun getCurrentWeekDates(): List<String> {
-        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-        val today = LocalDate.now()
-        val startOfWeek = today.with(DayOfWeek.SUNDAY).let {
-            if (today.dayOfWeek != DayOfWeek.SUNDAY) it.minusWeeks(1) else it
-        }
-
-        return (0..6).map { startOfWeek.plusDays(it.toLong()).format(formatter) }
-    }
-
     private fun createGreetings() {
         val currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
         val greeting = when (currentHour) {
@@ -237,16 +109,6 @@ class HomeViewModel @Inject constructor(
             while (true) {
                 delay(1000 * 60)
                 createGreetings()
-            }
-        }
-    }
-    fun retryTransaction(transaction: Transaction) {
-        if (transaction.offer == null) return
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                retryTransactionUseCase(transaction)
-            } catch (e: Exception) {
-                _snackbarMessage.value = e.message.toString()
             }
         }
     }

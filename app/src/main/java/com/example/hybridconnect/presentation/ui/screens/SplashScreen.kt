@@ -17,9 +17,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -47,7 +44,7 @@ fun SplashScreen() {
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "HybridConnect",
+                    text = "Hybrid",
                     style = MaterialTheme.typography.titleLarge.copy(
                         fontSize = 24.sp,
                         color = colorResource(id = R.color.primary)
@@ -55,7 +52,7 @@ fun SplashScreen() {
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = "Hybrid",
+                    text = "Connect",
                     style = MaterialTheme.typography.titleLarge.copy(
                         fontSize = 24.sp,
                         color = MaterialTheme.colorScheme.primary

@@ -5,7 +5,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.hybridconnect.domain.enums.AppSetting
 import com.example.hybridconnect.domain.enums.SocketEvent
-import com.example.hybridconnect.domain.repository.HybridConnectRepository
 import com.example.hybridconnect.domain.repository.PrefsRepository
 import com.example.hybridconnect.domain.services.SocketService
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,7 +20,6 @@ private const val TAG = "HybridConnectViewModel"
 class HybridConnectViewModel @Inject constructor(
     private val socketService: SocketService,
     private val prefsRepository: PrefsRepository,
-    private val hybridConnectRepository: HybridConnectRepository,
 ) : ViewModel() {
     private val _isGenerating = MutableStateFlow(false)
     val isGenerating: StateFlow<Boolean> = _isGenerating.asStateFlow()
@@ -77,20 +75,6 @@ class HybridConnectViewModel @Inject constructor(
                 _errorMessage.value = e.message
             } finally {
                 _isLoading.value = false
-            }
-        }
-    }
-
-    fun generateConnectId() {
-        viewModelScope.launch {
-            try {
-                _isGenerating.value = true
-                val connectId = hybridConnectRepository.generateConnectId()
-                _connectId.value = connectId
-            } catch (e: Exception) {
-                _errorMessage.value = e.message
-            } finally {
-                _isGenerating.value = false
             }
         }
     }

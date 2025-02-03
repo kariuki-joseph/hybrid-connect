@@ -1,6 +1,7 @@
 package com.example.hybridconnect.data.remote.api
 
 import com.example.hybridconnect.data.remote.api.request.AddSiteLinkOfferRequest
+import com.example.hybridconnect.data.remote.api.request.CheckCanConnectToAppRequest
 import com.example.hybridconnect.data.remote.api.request.ResendOtpRequest
 import com.example.hybridconnect.data.remote.api.request.SignInRequest
 import com.example.hybridconnect.data.remote.api.request.SignUpRequest
@@ -15,6 +16,7 @@ import com.example.hybridconnect.data.remote.api.response.ActiveSubscriptionResp
 import com.example.hybridconnect.data.remote.api.response.AdminPhoneResponse
 import com.example.hybridconnect.data.remote.api.response.ApiAgent
 import com.example.hybridconnect.data.remote.api.response.ApiResponse
+import com.example.hybridconnect.data.remote.api.response.CheckCanConnectToAppResponse
 import com.example.hybridconnect.data.remote.api.response.CommissionRateResponse
 import com.example.hybridconnect.data.remote.api.response.HybridConnectResponse
 import com.example.hybridconnect.data.remote.api.response.ResendOtpResponse
@@ -133,4 +135,9 @@ interface ApiService {
 
     @POST("hybrid-connect/generate")
     suspend fun generateHybridConnectId(): retrofit2.Response<ApiResponse<HybridConnectResponse>>
+
+    @GET("hybrid-connect/app-connection/check")
+    suspend fun checkCanConnectToApp(
+        @Body request: CheckCanConnectToAppRequest
+    ): retrofit2.Response<ApiResponse<CheckCanConnectToAppResponse>>
 }

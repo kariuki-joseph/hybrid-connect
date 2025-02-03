@@ -55,14 +55,14 @@ fun OnBoardingScreen1(
                     )
                     Spacer(modifier = Modifier.height(26.dp))
                     Text(
-                        text = "Sell your Bundles, airtime and minutes easily",
+                        text = "Achieve even faster speeds!",
                         style = MaterialTheme.typography.headlineMedium,
                         color = colorResource(id = R.color.secondary),
                         textAlign = TextAlign.Center
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "Focus on marketing and worry less about the process of delivery",
+                        text = "HybridConnect allows you to connect with multiple devices, in a manner optimized for speed",
                         style = MaterialTheme.typography.bodyLarge,
                         textAlign = TextAlign.Center
                     )
@@ -80,7 +80,7 @@ fun OnBoardingScreen1(
                     ) {
                         CustomButton(
                             primary = false,
-                            onClick = onNext,
+                            onClick = onSkip,
                         ) {
                             Text(
                                 text = "Skip",
@@ -97,7 +97,7 @@ fun OnBoardingScreen1(
                             onClick = onNext
                         ) {
                             Text(
-                                text = "Next",
+                                text = "Finish",
                                 style = MaterialTheme.typography.labelLarge.copy(
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer,

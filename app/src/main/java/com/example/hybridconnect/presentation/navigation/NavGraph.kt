@@ -80,10 +80,10 @@ fun NavGraph(
         composable(Route.OnboardingScreen1.name) {
             OnBoardingScreen1(
                 onSkip = {
-                    navController.navigate(Route.Register.name)
+                    navController.navigate(Route.Login.name)
                 },
                 onNext = {
-                    navController.navigate(Route.OnboardingScreen2.name)
+                    navController.navigate(Route.Login.name)
                 },
             )
         }

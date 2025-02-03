@@ -140,30 +140,6 @@ fun LoginScreenContent(
                 )
             }
         }
-
-        Spacer(modifier = Modifier.height(8.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Don't have an account?",
-                style = MaterialTheme.typography.bodyMedium
-            )
-            TextButton(
-                onClick = onRegisterClick
-            ) {
-                Text(
-                    text = AnnotatedString("Register"),
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold,
-                    )
-                )
-            }
-        }
-        Spacer(modifier = Modifier.height(8.dp))
     }
 }
 

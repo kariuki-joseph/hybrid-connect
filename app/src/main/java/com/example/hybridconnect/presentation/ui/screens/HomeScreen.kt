@@ -37,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.example.hybridconnect.domain.model.ConnectedApp
 import com.example.hybridconnect.domain.utils.SnackbarManager
 import com.example.hybridconnect.presentation.navigation.Route
 import com.example.hybridconnect.presentation.ui.components.ConnectedAppComponent
@@ -59,6 +60,8 @@ fun HomeScreen(
     var showStopAppWarningDialog by remember { mutableStateOf(false) }
     val logoutSuccess by viewModel.logoutSuccess.collectAsState()
     val snackbarMessage by viewModel.snackbarMessage.collectAsState()
+    var selectedApp by remember { mutableStateOf<ConnectedApp?>(null) }
+    var showConfirmDeleteAppDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(logoutSuccess) {
         if (logoutSuccess) {
@@ -136,7 +139,10 @@ fun HomeScreen(
                         ConnectedAppComponent(
                             connectedApp = app,
                             isDeletingApp = isDeletingApp,
-                            onDeleteApp = { viewModel.deleteConnectedApp(it) }
+                            onDeleteApp = {
+                                selectedApp = it
+                                showConfirmDeleteAppDialog = true
+                            }
                         )
                     }
                 }
@@ -177,6 +183,34 @@ fun HomeScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showStopAppWarningDialog = false }) {
+                    Text(text = "Cancel")
+                }
+            }
+        )
+    }
+
+
+    if (showConfirmDeleteAppDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showConfirmDeleteAppDialog = false
+                selectedApp = null
+            },
+            title = { Text(text = "Delete App") },
+            text = { Text(text = "You won't be able to send messages to this app until you re-connect again") },
+            confirmButton = {
+                TextButton(onClick = {
+                    selectedApp?.let { viewModel.deleteConnectedApp(it) }
+                    showConfirmDeleteAppDialog = false
+                }) {
+                    Text(text = "Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showConfirmDeleteAppDialog = false
+                    selectedApp = null
+                }) {
                     Text(text = "Cancel")
                 }
             }

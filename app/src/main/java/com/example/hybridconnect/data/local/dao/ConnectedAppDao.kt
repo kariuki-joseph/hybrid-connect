@@ -10,6 +10,9 @@ interface ConnectedAppDao {
     @Insert
     suspend fun addConnectedApp(connectedApp: ConnectedAppEntity)
 
+    @Query("SELECT * FROM connected_apps WHERE connectId = :connectId LIMIT 1")
+    suspend fun getConnectedAppById(connectId: String): ConnectedAppEntity?
+
     @Query("SELECT * FROM connected_apps")
     suspend fun getAllConnectedApps(): List<ConnectedAppEntity>
 

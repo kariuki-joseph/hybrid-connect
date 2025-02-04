@@ -48,13 +48,14 @@ import com.example.hybridconnect.domain.utils.SnackbarManager
 import com.example.hybridconnect.presentation.ui.components.CustomButton
 import com.example.hybridconnect.presentation.viewmodel.AddConnectedAppViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddConnectedAppScreen(
-    navController: NavHostController? = null,
+    navController: NavHostController,
     viewModel: AddConnectedAppViewModel = hiltViewModel(),
 ) {
     val scope = rememberCoroutineScope()
@@ -68,6 +69,16 @@ fun AddConnectedAppScreen(
         errorMessage?.let {
             SnackbarManager.showMessage(scope, it)
             viewModel.resetErrorMessage()
+        }
+    }
+
+    LaunchedEffect(connectSuccess) {
+        if (connectSuccess){
+            SnackbarManager.showMessage(scope, "App connected successfully")
+            delay(2000)
+            viewModel.resetConnectSuccess()
+            navController.popBackStack()
+
         }
     }
 

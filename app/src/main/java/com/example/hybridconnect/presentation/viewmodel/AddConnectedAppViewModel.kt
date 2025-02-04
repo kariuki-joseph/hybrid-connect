@@ -52,6 +52,11 @@ class AddConnectedAppViewModel @Inject constructor(
                 _isLoading.value = true
                 validateConnectId(connectId)
                 validateAppName(appName)
+
+                if (connectedAppRepository.getConnectedApp(connectId) != null){
+                    throw Exception("You have already connected with this app")
+                }
+
                 val canConnect = connectedAppRepository.checkCanConnectToApp(connectId)
                 if (!canConnect) {
                     throw Exception("You are only allowed to connect to your apps. Please confirm your account is active in the device with this ConnectID")
@@ -93,5 +98,9 @@ class AddConnectedAppViewModel @Inject constructor(
             delay(2000)
             _errorMessage.value = null
         }
+    }
+
+    fun resetConnectSuccess() {
+        _connectSuccess.value = false
     }
 }

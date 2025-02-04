@@ -28,6 +28,14 @@ class ConnectedAppRepositoryImpl @Inject constructor(
 
     private val _connectedAppsFlow = MutableStateFlow<List<ConnectedApp>>(emptyList())
     override suspend fun getConnectedApps(): StateFlow<List<ConnectedApp>> = _connectedAppsFlow
+    override suspend fun getConnectedApp(connectId: String): ConnectedApp? {
+        try {
+            return connectedAppDao.getConnectedAppById(connectId)?.toDomain()
+        } catch (e: Exception) {
+            Log.e(TAG, "getConnectedApp", e)
+            throw e
+        }
+    }
 
     init {
         CoroutineScope(Dispatchers.IO).launch {

@@ -27,12 +27,14 @@ class SmsProcessingService : Service() {
 
     @Inject
     lateinit var smsProcessor: SmsProcessor
+    @Inject lateinit var socketService: SocketService
 
     private val serviceScope = CoroutineScope(Dispatchers.IO)
 
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
+        socketService.connect()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -74,5 +76,10 @@ class SmsProcessingService : Service() {
         )
         val manager = getSystemService(NotificationManager::class.java)
         manager?.createNotificationChannel(channel)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        socketService.disconnect()
     }
 }

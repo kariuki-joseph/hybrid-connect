@@ -5,9 +5,12 @@ import android.content.Intent
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.hybridconnect.domain.enums.AppSetting
 import com.example.hybridconnect.domain.model.Agent
+import com.example.hybridconnect.domain.model.ConnectedApp
 import com.example.hybridconnect.domain.repository.AuthRepository
+import com.example.hybridconnect.domain.repository.ConnectedAppRepository
 import com.example.hybridconnect.domain.repository.PrefsRepository
 import com.example.hybridconnect.domain.services.SmsProcessingService
 import com.example.hybridconnect.domain.usecase.LogoutUserUseCase
@@ -34,7 +37,11 @@ class HomeViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val prefsRepository: PrefsRepository,
     private val logoutUserUseCase: LogoutUserUseCase,
+    private val connectedAppRepository: ConnectedAppRepository
 ) : ViewModel() {
+    private val _connectedApps = MutableStateFlow<List<ConnectedApp>>(emptyList())
+    val connectedApps: StateFlow<List<ConnectedApp>> = _connectedApps.asStateFlow()
+
     val isAppActive: StateFlow<Boolean> = prefsRepository.isAppActive
 
     private val agent: StateFlow<Agent?> = authRepository.agent
@@ -57,6 +64,7 @@ class HomeViewModel @Inject constructor(
 
     init {
         loadAgent()
+        loadConnectedApps()
         createGreetings()
         startGreetingTimer()
     }
@@ -70,6 +78,18 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 authRepository.fetchAgent()
+            } catch (e: Exception) {
+                _snackbarMessage.value = e.message.toString()
+            }
+        }
+    }
+
+    private fun loadConnectedApps(){
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                connectedAppRepository.getConnectedApps().collect { apps ->
+                    _connectedApps.value = apps
+                }
             } catch (e: Exception) {
                 _snackbarMessage.value = e.message.toString()
             }

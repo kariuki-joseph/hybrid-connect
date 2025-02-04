@@ -136,7 +136,7 @@ interface ApiService {
     @POST("hybrid-connect/generate")
     suspend fun generateHybridConnectId(): retrofit2.Response<ApiResponse<HybridConnectResponse>>
 
-    @GET("hybrid-connect/app-connection/check")
+    @POST("hybrid-connect/app-connection/check")
     suspend fun checkCanConnectToApp(
         @Body request: CheckCanConnectToAppRequest
     ): retrofit2.Response<ApiResponse<CheckCanConnectToAppResponse>>

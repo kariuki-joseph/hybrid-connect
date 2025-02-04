@@ -4,11 +4,15 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddBox
 import androidx.compose.material.icons.filled.Wifi
@@ -35,6 +39,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.hybridconnect.domain.utils.SnackbarManager
 import com.example.hybridconnect.presentation.navigation.Route
+import com.example.hybridconnect.presentation.ui.components.ConnectedAppComponent
 import com.example.hybridconnect.presentation.viewmodel.HomeViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -49,6 +54,7 @@ fun HomeScreen(
     val agentFirstName by viewModel.agentFirstName.collectAsState()
     val greetings by viewModel.greetings.collectAsState()
     val isAppActive by viewModel.isAppActive.collectAsState()
+    val connectedApps by viewModel.connectedApps.collectAsState()
 
     var showStopAppWarningDialog by remember { mutableStateOf(false) }
     val logoutSuccess by viewModel.logoutSuccess.collectAsState()
@@ -112,10 +118,22 @@ fun HomeScreen(
                             Icon(
                                 imageVector = Icons.Default.AddBox,
                                 contentDescription = "Add App",
-                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                tint = MaterialTheme.colorScheme.primaryContainer,
                                 modifier = Modifier.size(28.dp)
                             )
                         }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+                LazyColumn(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    items(connectedApps){ app ->
+                        ConnectedAppComponent(
+                            connectedApp = app,
+                            onDeleteApp = {}
+                        )
                     }
                 }
             }

@@ -26,8 +26,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -114,28 +120,37 @@ fun AddConnectedAppScreenContent(
     onAppNameChanged: (String) -> Unit,
     onTryConnect: () -> Unit,
 ) {
+    var hasFocus by remember { mutableStateOf(false) }
+    val focusRequester = remember { FocusRequester() }
+
     Column {
         OutlinedTextField(
             value = connectId,
             onValueChange = { newValue: String ->
-                if (newValue.length <= 9 && newValue.matches(Regex("[A-Za-z0-9-]*"))) {
+                if (newValue.length <= 5 && newValue.matches(Regex("[A-Za-z0-9]*"))) {
                     onConnectIdChanged(newValue)
                 }
             },
             label = { Text("Connect ID") },
-            placeholder = { Text("Enter 5-Digit Connect ID") },
+            placeholder = { Text("5-Digit Connect ID") },
             keyboardOptions = KeyboardOptions.Default.copy(
                 keyboardType = KeyboardType.Ascii,
                 capitalization = KeyboardCapitalization.Characters
             ),
             modifier = Modifier
                 .fillMaxWidth()
-                .width(300.dp),
+                .width(300.dp)
+                .onFocusChanged { focusState ->
+                    hasFocus = focusState.isFocused
+                }
+                .focusRequester(focusRequester),
             textStyle = TextStyle(
                 fontFamily = FontFamily.Monospace,
                 fontSize = 20.sp
             ),
-            leadingIcon = { Text("BHC-") }
+            leadingIcon = if (hasFocus || connectId.isNotEmpty()) {
+                { Text("BHC-", modifier = Modifier.padding(start = 5.dp)) }
+            } else null
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -147,7 +162,7 @@ fun AddConnectedAppScreenContent(
                 }
             },
             label = { Text("App Name") },
-            placeholder = { Text("Enter Your Desired App Name") },
+            placeholder = { Text("Desired App Name") },
             keyboardOptions = KeyboardOptions.Default.copy(
                 keyboardType = KeyboardType.Ascii,
                 capitalization = KeyboardCapitalization.Words
@@ -196,7 +211,7 @@ fun AddConnectedAppScreenContent(
 private fun AddConnectedAppScreenPreview() {
     AddConnectedAppScreenContent(
         connectId = "458834",
-        appName = "Jose Main App",
+        appName = "Hybrid Main",
         isLoading = false,
         connectSuccess = false,
         onConnectIdChanged = {},

@@ -2,6 +2,7 @@ package com.example.hybridconnect.data.di
 
 import com.example.hybridconnect.data.remote.api.ApiService
 import com.example.hybridconnect.data.remote.socket.SocketServiceImpl
+import com.example.hybridconnect.domain.repository.ConnectedAppRepository
 import com.example.hybridconnect.domain.repository.PrefsRepository
 import com.example.hybridconnect.domain.services.SocketService
 import com.example.hybridconnect.domain.utils.Constants
@@ -65,7 +66,8 @@ object NetworkModule {
     @Singleton
     fun provideSocketService(
         prefsRepository: PrefsRepository,
+        connectedAppRepository: ConnectedAppRepository,
     ): SocketService {
-        return SocketServiceImpl(BASE_URL, prefsRepository)
+        return SocketServiceImpl(BASE_URL, prefsRepository, connectedAppRepository)
     }
 }

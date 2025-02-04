@@ -1,7 +1,6 @@
 package com.example.hybridconnect.presentation.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -201,29 +200,22 @@ fun EditProfileScreenContent(
             modifier = Modifier
                 .fillMaxWidth()
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.CenterHorizontally)
-            ) {
-                if (isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier
-                            .size(32.dp)
-                            .align(Alignment.CenterStart)
-                    )
-                } else {
-                    Text(
-                        text = "Update",
-                        style = MaterialTheme.typography.labelLarge.copy(
-                            fontWeight = FontWeight.Bold
-                        ),
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
-                    )
-                }
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .size(32.dp)
+                )
+            } else {
+                Text(
+                    text = "Update",
+                    style = MaterialTheme.typography.labelLarge.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                )
             }
+
         }
     }
 }

@@ -82,7 +82,7 @@ class AddConnectedAppViewModel @Inject constructor(
     }
 
     private fun validateAppName(appName: String) {
-        if(appName.length <= 3){
+        if(appName.length < 3){
             throw Exception("App name should be at least 3 characters long")
         }
     }

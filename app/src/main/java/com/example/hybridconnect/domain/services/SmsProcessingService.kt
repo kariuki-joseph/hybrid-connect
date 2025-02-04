@@ -28,9 +28,6 @@ class SmsProcessingService : Service() {
     @Inject
     lateinit var smsProcessor: SmsProcessor
 
-    @Inject
-    lateinit var socketService: SocketService
-
     private val serviceScope = CoroutineScope(Dispatchers.IO)
 
     override fun onCreate() {
@@ -40,8 +37,6 @@ class SmsProcessingService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         showNotification("Waiting", "Waiting for new sms")
-
-        listenForWebsocketMessages()
 
         intent?.getStringExtra("message")?.let { message ->
             val sender = intent.getStringExtra("sender") ?: ""
@@ -79,24 +74,5 @@ class SmsProcessingService : Service() {
         )
         val manager = getSystemService(NotificationManager::class.java)
         manager?.createNotificationChannel(channel)
-    }
-
-    private fun listenForWebsocketMessages() {
-        socketService.on(SocketEvent.EVENT_NEW_MESSAGE.name) { args ->
-            if (args.isNotEmpty()) {
-                val jsonData = args[0]
-
-                if (jsonData is JSONObject) {
-                    val message = jsonData.optString("message", "")
-                    val sender = "MPESA"
-                    val simSlot = 1
-
-                    Log.d(TAG, "New HybridConnect Message: $sender, Message: ${message.take(30)}...")
-                    smsProcessor.processMessage(message, sender, simSlot)
-                } else {
-                    Log.e(TAG, "Received unexpected WebSocket data type: ${jsonData.javaClass}")
-                }
-            }
-        }
     }
 }

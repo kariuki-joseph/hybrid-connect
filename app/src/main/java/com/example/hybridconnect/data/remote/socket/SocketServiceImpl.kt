@@ -68,6 +68,7 @@ class SocketServiceImpl(
             }
         }
     }
+
     override fun disconnect() {
         if (::socket.isInitialized) {
             socket.disconnect()

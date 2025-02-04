@@ -2,10 +2,12 @@ package com.example.hybridconnect.domain.di
 
 import android.content.Context
 import com.example.hybridconnect.domain.repository.AuthRepository
+import com.example.hybridconnect.domain.repository.ConnectedAppRepository
 import com.example.hybridconnect.domain.repository.PrefsRepository
 import com.example.hybridconnect.domain.services.DefaultMessageExtractor
 import com.example.hybridconnect.domain.services.SiteLinkMessageExtractor
 import com.example.hybridconnect.domain.services.SmsProcessor
+import com.example.hybridconnect.domain.services.SocketService
 import com.example.hybridconnect.domain.services.TillMessageExtractor
 import com.example.hybridconnect.domain.services.interfaces.MessageExtractor
 import com.example.hybridconnect.domain.usecase.ExtractMessageDetailsUseCase
@@ -77,11 +79,15 @@ object DomainModule {
     @Singleton
     fun provideSmsProcessor(
         validateMessageUseCase: ValidateMessageUseCase,
-        extractMessageDetailsUseCase: ExtractMessageDetailsUseCase
+        extractMessageDetailsUseCase: ExtractMessageDetailsUseCase,
+        connectedAppRepository: ConnectedAppRepository,
+        socketService: SocketService,
     ): SmsProcessor {
         return SmsProcessor(
             validateMessageUseCase,
             extractMessageDetailsUseCase,
+            connectedAppRepository,
+            socketService
         )
     }
 

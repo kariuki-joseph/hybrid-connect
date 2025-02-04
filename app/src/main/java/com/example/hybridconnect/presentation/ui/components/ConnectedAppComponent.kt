@@ -8,6 +8,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,6 +25,7 @@ import com.example.hybridconnect.domain.model.ConnectedApp
 fun ConnectedAppComponent(
     modifier: Modifier = Modifier,
     connectedApp: ConnectedApp,
+    onDeleteApp: (app: ConnectedApp) -> Unit
 ) {
     Row(
         modifier = modifier
@@ -30,7 +35,30 @@ fun ConnectedAppComponent(
             text = connectedApp.connectId,
             style = MaterialTheme.typography.bodyMedium
         )
+       Text(text = "-")
+        Text(
+            text = connectedApp.appName,
+            style = MaterialTheme.typography.bodySmall
+        )
         Spacer(modifier = Modifier.width(8.dp))
+
+        Dot(isOnline = connectedApp.isOnline)
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        Text(
+            text = connectedApp.messagesSent.toString(),
+            style = MaterialTheme.typography.bodyMedium
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        IconButton(
+            onClick = { onDeleteApp(connectedApp) }
+        ){
+            Icon(
+                imageVector = Icons.Outlined.Delete,
+                contentDescription = "Delete App"
+            )
+        }
     }
 }
 
@@ -51,7 +79,13 @@ private fun Dot(
 private fun ConnectedAppComponentPreview() {
     val connectedApp = ConnectedApp(
         connectId = "BHC-6SHYS",
+        appName = "Hybrid Main",
         isOnline = true,
-        messagesSent = 30
+        messagesSent = 30,
+    )
+
+    ConnectedAppComponent(
+        connectedApp = connectedApp,
+        onDeleteApp = {}
     )
 }

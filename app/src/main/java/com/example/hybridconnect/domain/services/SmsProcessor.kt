@@ -9,6 +9,7 @@ import com.example.hybridconnect.domain.usecase.ExtractMessageDetailsUseCase
 import com.example.hybridconnect.domain.usecase.ValidateMessageUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 import javax.inject.Inject
@@ -44,24 +45,22 @@ class SmsProcessor @Inject constructor(
 
     }
 
-    private fun sendWebSocketMessage(message: String) {
-        CoroutineScope(Dispatchers.IO).launch {
-            connectedAppRepository.getConnectedApps().collect { apps ->
-                val activeApps = apps.filter { it.isOnline }
+    private suspend fun sendWebSocketMessage(message: String) {
+        val apps = connectedAppRepository.getConnectedApps().first()
+        val activeApps = apps.filter { it.isOnline }
 
-                if(activeApps.isEmpty()){
-                    Log.e(TAG, "No connected apps available to process the message")
-                    return@collect
-                }
-
-                // move to the next app in a round-robin order
-                lastAssignedIndex = (lastAssignedIndex +1 ) % activeApps.size
-                val selectedApp = activeApps[lastAssignedIndex]
-
-                Log.d(TAG, "Sending message to ${selectedApp.connectId}")
-                socketService.sendMessageToApp(selectedApp, message)
-                connectedAppRepository.incrementMessagesSent(selectedApp)
-            }
+        if (activeApps.isEmpty()) {
+            Log.e(TAG, "No connected apps available to process the message")
+            return
         }
+
+        // Move to the next app in a round-robin order
+        lastAssignedIndex = (lastAssignedIndex + 1) % activeApps.size
+        val selectedApp = activeApps[lastAssignedIndex]
+
+        Log.d(TAG, "Sending message to ${selectedApp.connectId}")
+        socketService.sendMessageToApp(selectedApp, message)
+        connectedAppRepository.incrementMessagesSent(selectedApp)
     }
+
 }

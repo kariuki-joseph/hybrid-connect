@@ -58,6 +58,7 @@ class SocketServiceImpl(
                 socket.on(Socket.EVENT_DISCONNECT) {
                     println("Socket disconnected")
                     _isConnected.value = false
+                    markAllAppsOffline()
                 }
 
                 registerOnlineStatusListeners()
@@ -129,6 +130,16 @@ class SocketServiceImpl(
             CoroutineScope(Dispatchers.IO).launch {
                 connectedAppRepository.updateOnlineStatus(connectId, false)
             }
+        }
+    }
+
+    private fun markAllAppsOffline() {
+        CoroutineScope(Dispatchers.IO).launch {
+            val connectedApps = connectedAppRepository.getConnectedApps().value
+            connectedApps.forEach { app ->
+                connectedAppRepository.updateOnlineStatus(app.connectId, false)
+            }
+            Log.d(TAG, "All connected apps marked as offline")
         }
     }
 }

@@ -131,31 +131,6 @@ fun SettingsScreenContent(
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "HybridConnect SIM (To run USSDs)",
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
-        SettingItem {
-            SwitchSettingItem(
-                setting = AppSetting.DIAL_USSD_VIA_SIM_1,
-                title = "SIM 1",
-                isChecked = settings[AppSetting.DIAL_USSD_VIA_SIM_1] ?: false,
-                onCheckedChange = onSettingChange,
-                icon = { Icon(Icons.Outlined.SimCard, contentDescription = "SIM") }
-            )
-        }
-        SettingItem {
-            SwitchSettingItem(
-                setting = AppSetting.DIAL_USSD_VIA_SIM_2,
-                title = "SIM 2",
-                isChecked = settings[AppSetting.DIAL_USSD_VIA_SIM_2] ?: false,
-                onCheckedChange = onSettingChange,
-                icon = { Icon(Icons.Outlined.SimCard, contentDescription = "SIM") }
-            )
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
         SectionTitle("Message Processing")
         SettingItem {
             SwitchSettingItem(
@@ -171,24 +146,6 @@ fun SettingsScreenContent(
                 setting = AppSetting.PROCESS_TILL_MESSAGES,
                 title = "Process Till Messages",
                 isChecked = settings[AppSetting.PROCESS_TILL_MESSAGES] ?: false,
-                onCheckedChange = onSettingChange
-            )
-        }
-
-        SettingItem {
-            SwitchSettingItem(
-                setting = AppSetting.AUTO_RETRY_PENDING_REQUESTS,
-                title = "Auto-Retry Pending Requests",
-                isChecked = settings[AppSetting.AUTO_RETRY_PENDING_REQUESTS] ?: false,
-                onCheckedChange = onSettingChange
-            )
-        }
-
-        SettingItem {
-            SwitchSettingItem(
-                setting = AppSetting.AUTO_RETRY_SERVICE_UNAVAILABLE_RESPONSE,
-                title = "Smart Auto-Retry - SMS Only",
-                isChecked = settings[AppSetting.AUTO_RETRY_SERVICE_UNAVAILABLE_RESPONSE] ?: false,
                 onCheckedChange = onSettingChange
             )
         }

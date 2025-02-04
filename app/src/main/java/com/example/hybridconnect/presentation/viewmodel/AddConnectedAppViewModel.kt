@@ -44,7 +44,7 @@ class AddConnectedAppViewModel @Inject constructor(
 
 
     fun attemptConnect() {
-        val connectId = _connectId.value
+        val connectId = "BHC-${_connectId.value}"
         val appName = _appName.value
 
         viewModelScope.launch {
@@ -56,27 +56,28 @@ class AddConnectedAppViewModel @Inject constructor(
                 if (!canConnect) {
                     throw Exception("You are only allowed to connect to your apps. Please confirm your account is active in the device with this ConnectID")
                 }
-                
                 val connectedApp = ConnectedApp(
-                    connectId, isOnline = true,
+                    connectId, isOnline = false,
                     appName = appName,
                 )
-
                 connectedAppRepository.addConnectedApp(connectedApp)
+                _connectSuccess.value = true
             } catch (e: Exception) {
-                _isLoading.value = false
                 _errorMessage.value = e.message
                 _connectSuccess.value = false
                 resetErrorMessage()
+            } finally {
+                _isLoading.value = false
             }
         }
     }
 
     private fun validateConnectId(connectId: String) {
-        if(connectId.length < 5){
+        val id = connectId.split("-")[1]
+        if(id.length < 5){
             throw Exception("ConnectID is too short")
         }
-        if(connectId.length > 5){
+        if(id.length > 5){
             throw Exception("Invalid ConnectID")
         }
     }

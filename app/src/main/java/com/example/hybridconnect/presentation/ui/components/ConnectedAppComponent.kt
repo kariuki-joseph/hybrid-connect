@@ -1,6 +1,7 @@
 package com.example.hybridconnect.presentation.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,35 +11,48 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.hybridconnect.domain.model.ConnectedApp
 
 @Composable
 fun ConnectedAppComponent(
-    modifier: Modifier = Modifier,
     connectedApp: ConnectedApp,
-    onDeleteApp: (app: ConnectedApp) -> Unit
+    isDeletingApp: Boolean = false,
+    onDeleteApp: (app: ConnectedApp) -> Unit,
 ) {
     Row(
-        modifier = modifier
-            .fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         Text(
-            text = connectedApp.connectId,
-            style = MaterialTheme.typography.bodyMedium
-        )
-       Text(text = "-")
-        Text(
-            text = connectedApp.appName,
-            style = MaterialTheme.typography.bodySmall
+            text = buildAnnotatedString {
+                append(connectedApp.connectId)
+                append(" ")
+                withStyle(style = SpanStyle(
+                    fontSize = 11.sp
+                )){
+                    append("(${connectedApp.appName})")
+                }
+                connectedApp.connectId
+            },
+            style = MaterialTheme.typography.bodyLarge
         )
         Spacer(modifier = Modifier.width(8.dp))
 
@@ -47,17 +61,33 @@ fun ConnectedAppComponent(
         Spacer(modifier = Modifier.width(8.dp))
 
         Text(
-            text = connectedApp.messagesSent.toString(),
-            style = MaterialTheme.typography.bodyMedium
+            text = buildAnnotatedString {
+                withStyle(style = SpanStyle(
+                    fontWeight = FontWeight.Bold
+                )){
+                    append(connectedApp.messagesSent.toString())
+                }
+                append(" ")
+                append("Messages sent")
+            },
+            style = MaterialTheme.typography.labelSmall.copy(
+                color = MaterialTheme.colorScheme.secondary
+            )
         )
+
         Spacer(modifier = Modifier.width(8.dp))
         IconButton(
             onClick = { onDeleteApp(connectedApp) }
-        ){
-            Icon(
-                imageVector = Icons.Outlined.Delete,
-                contentDescription = "Delete App"
-            )
+        ) {
+            if (isDeletingApp) {
+                CircularProgressIndicator()
+            } else {
+                Icon(
+                    imageVector = Icons.Outlined.Delete,
+                    contentDescription = "Delete App",
+                    modifier = Modifier.size(24.dp)
+                )
+            }
         }
     }
 }
@@ -69,7 +99,7 @@ private fun Dot(
     val color = if (isOnline) Color.Green else MaterialTheme.colorScheme.error
     Box(
         modifier = Modifier
-            .size(8.dp)
+            .size(10.dp)
             .background(color, CircleShape)
     )
 }

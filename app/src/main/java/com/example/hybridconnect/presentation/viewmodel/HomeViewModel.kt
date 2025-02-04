@@ -5,7 +5,6 @@ import android.content.Intent
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.hybridconnect.domain.enums.AppSetting
 import com.example.hybridconnect.domain.model.Agent
 import com.example.hybridconnect.domain.model.ConnectedApp
@@ -37,7 +36,7 @@ class HomeViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val prefsRepository: PrefsRepository,
     private val logoutUserUseCase: LogoutUserUseCase,
-    private val connectedAppRepository: ConnectedAppRepository
+    private val connectedAppRepository: ConnectedAppRepository,
 ) : ViewModel() {
     private val _connectedApps = MutableStateFlow<List<ConnectedApp>>(emptyList())
     val connectedApps: StateFlow<List<ConnectedApp>> = _connectedApps.asStateFlow()
@@ -62,6 +61,9 @@ class HomeViewModel @Inject constructor(
     private val _snackbarMessage = MutableStateFlow<String?>(null)
     val snackbarMessage: StateFlow<String?> = _snackbarMessage
 
+    private val _isDeletingApp = MutableStateFlow(false)
+    val isDeletingApp: StateFlow<Boolean> = _isDeletingApp.asStateFlow()
+
     init {
         loadAgent()
         loadConnectedApps()
@@ -84,7 +86,7 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private fun loadConnectedApps(){
+    private fun loadConnectedApps() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 connectedAppRepository.getConnectedApps().collect { apps ->
@@ -92,6 +94,20 @@ class HomeViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 _snackbarMessage.value = e.message.toString()
+            }
+
+        }
+    }
+
+    fun deleteConnectedApp(connectedApp: ConnectedApp) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                _isDeletingApp.value = true
+                connectedAppRepository.deleteConnectedApp(connectedApp)
+            } catch (e: Exception) {
+                _snackbarMessage.value = e.message.toString()
+            } finally {
+                _isDeletingApp.value = false
             }
 
         }
@@ -124,7 +140,7 @@ class HomeViewModel @Inject constructor(
         _greetings.value = greeting
     }
 
-    private fun startGreetingTimer(){
+    private fun startGreetingTimer() {
         viewModelScope.launch {
             while (true) {
                 delay(1000 * 60)

@@ -55,7 +55,7 @@ fun HomeScreen(
     val greetings by viewModel.greetings.collectAsState()
     val isAppActive by viewModel.isAppActive.collectAsState()
     val connectedApps by viewModel.connectedApps.collectAsState()
-
+    val isDeletingApp by viewModel.isDeletingApp.collectAsState()
     var showStopAppWarningDialog by remember { mutableStateOf(false) }
     val logoutSuccess by viewModel.logoutSuccess.collectAsState()
     val snackbarMessage by viewModel.snackbarMessage.collectAsState()
@@ -127,12 +127,16 @@ fun HomeScreen(
 
                 Spacer(modifier = Modifier.height(8.dp))
                 LazyColumn(
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .weight(1f)
                 ) {
-                    items(connectedApps){ app ->
+                    items(connectedApps) { app ->
                         ConnectedAppComponent(
                             connectedApp = app,
-                            onDeleteApp = {}
+                            isDeletingApp = isDeletingApp,
+                            onDeleteApp = { viewModel.deleteConnectedApp(it) }
                         )
                     }
                 }
@@ -151,10 +155,10 @@ fun HomeScreen(
                 .align(Alignment.BottomEnd)
                 .padding(bottom = 32.dp, end = 32.dp)
         ) {
-           Icon(
-               imageVector = if (isAppActive) Icons.Default.Wifi else Icons.Default.WifiOff,
-               contentDescription = if (isAppActive) "Wifi Off" else "Wifi On"
-           )
+            Icon(
+                imageVector = if (isAppActive) Icons.Default.Wifi else Icons.Default.WifiOff,
+                contentDescription = if (isAppActive) "Wifi Off" else "Wifi On"
+            )
         }
     }
 

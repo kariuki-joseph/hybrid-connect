@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 
 private const val TAG = "SocketServiceImpl"
 
@@ -78,11 +79,10 @@ class SocketServiceImpl(
 
     override fun sendMessageToApp(app: ConnectedApp, data: Any) {
         if (::socket.isInitialized) {
-            val dataToSend = mapOf(
-                "connectId" to app.connectId,
-                "message" to data
-            )
-            socket.emit(SocketEvent.EVENT_SEND_MESSAGE.name, dataToSend)
+            val message = JSONObject()
+            message.put("connectId", app.connectId)
+            message.put("message", data)
+            socket.emit(SocketEvent.EVENT_SEND_MESSAGE.name, message)
         }
     }
 

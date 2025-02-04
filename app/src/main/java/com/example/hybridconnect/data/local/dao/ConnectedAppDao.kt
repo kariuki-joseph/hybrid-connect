@@ -16,6 +16,9 @@ interface ConnectedAppDao {
     @Query("UPDATE connected_apps SET messagesSent = messagesSent + 1 WHERE connectId = :connectId")
     suspend fun incrementMessagesSent(connectId: String)
 
+    @Query("UPDATE connected_apps SET isOnline = :isOnline WHERE connectId = :connectId")
+    suspend fun updateOnlineStatus(connectId: String, isOnline: Boolean)
+
     @Query("DELETE FROM connected_apps WHERE connectId = :connectId")
     suspend fun deleteConnectedApp(connectId: String)
 }

@@ -45,6 +45,18 @@ class ConnectedAppRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun updateOnlineStatus(connectId: String, isOnline: Boolean) {
+        try {
+            connectedAppDao.updateOnlineStatus(connectId, isOnline)
+            _connectedAppsFlow.value = _connectedAppsFlow.value.map {
+                if (it.connectId == connectId) it.copy(isOnline = isOnline) else it
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error updating online status", e)
+            throw e
+        }
+    }
+
     override suspend fun incrementMessagesSent(connectedApp: ConnectedApp) {
         try {
             connectedAppDao.incrementMessagesSent(connectedApp.connectId)
@@ -77,12 +89,13 @@ class ConnectedAppRepositoryImpl @Inject constructor(
                 val errorCode = response.code()
                 Log.e(TAG, "Error code: $errorCode, Error message: ${response.errorBody()}")
                 throw Exception(
-                    response.errorBody()?.toApiError()?.message ?: "Error checking if can connect to app"
+                    response.errorBody()?.toApiError()?.message
+                        ?: "Error checking if can connect to app"
                 )
             }
 
             return response.body()?.data?.canConnect ?: false
-        } catch (e: Exception){
+        } catch (e: Exception) {
             Log.e(TAG, "Error checking canAddConnectedApp", e)
             throw e
         }

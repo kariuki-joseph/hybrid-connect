@@ -3,6 +3,8 @@ package com.example.hybridconnect.data.remote.socket
 import android.util.Log
 import com.example.hybridconnect.domain.enums.AppSetting
 import com.example.hybridconnect.domain.enums.SocketEvent
+import com.example.hybridconnect.domain.model.ConnectedApp
+import com.example.hybridconnect.domain.repository.ConnectedAppRepository
 import com.example.hybridconnect.domain.repository.PrefsRepository
 import com.example.hybridconnect.domain.services.SocketService
 import io.socket.client.IO
@@ -15,9 +17,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 private const val TAG = "SocketServiceImpl"
+
 class SocketServiceImpl(
     private val serverUrl: String,
     private val prefsRepository: PrefsRepository,
+    private val connectedAppRepository: ConnectedAppRepository
 ) : SocketService {
     private lateinit var socket: Socket
     private val eventListeners = mutableMapOf<String, (List<Any>) -> Unit>()
@@ -30,27 +34,20 @@ class SocketServiceImpl(
             try {
                 Log.d(TAG, "Trying to connect to socket...")
                 val agentId = prefsRepository.getSetting(AppSetting.AGENT_ID)
-                val connectId = prefsRepository.getSetting(AppSetting.APP_CONNECT_ID)
                 if (agentId.isEmpty()) {
-                    invokeListener(SocketEvent.EVENT_CONNECT_ERROR.name, listOf("You need to be logged in to use this feature"))
+                    invokeListener(
+                        SocketEvent.EVENT_CONNECT_ERROR.name,
+                        listOf("You need to be logged in to use HybridConnect")
+                    )
                     Log.d(TAG, "Agent not logged in. Could not connect")
                     throw Exception("Agent not logged in. Could not connect")
-                }
-
-                if (connectId.isEmpty()) {
-                    invokeListener(SocketEvent.EVENT_CONNECT_ERROR.name, listOf("App cannot connect without a valid Connect ID"))
-                    Log.d(TAG, "App Connect ID missing")
-                    throw Exception("App cannot connect without a valid Connect ID")
                 }
 
                 val options = IO.Options().apply {
                     auth = mapOf(
                         "userId" to agentId,
-                        "connectId" to connectId
                     )
                 }
-
-                Log.d(TAG, "Connecting to socket using params ${options.auth}")
 
                 socket = IO.socket(serverUrl, options)
 
@@ -62,6 +59,8 @@ class SocketServiceImpl(
                     println("Socket disconnected")
                     _isConnected.value = false
                 }
+
+                registerOnlineStatusListeners()
                 registerDynamicEventListeners()
                 socket.connect()
             } catch (e: Exception) {
@@ -69,16 +68,19 @@ class SocketServiceImpl(
             }
         }
     }
-
     override fun disconnect() {
         if (::socket.isInitialized) {
             socket.disconnect()
         }
     }
 
-    override fun sendMessage(event: String, data: Any) {
+    override fun sendMessageToApp(app: ConnectedApp, data: Any) {
         if (::socket.isInitialized) {
-            socket.emit(event, data)
+            val dataToSend = mapOf(
+                "connectId" to app.connectId,
+                "message" to data
+            )
+            socket.emit(SocketEvent.EVENT_SEND_MESSAGE.name, dataToSend)
         }
     }
 
@@ -92,7 +94,7 @@ class SocketServiceImpl(
 
     override fun on(event: String, listener: (List<Any>) -> Unit) {
         if (!eventListeners.containsKey(event)) {
-            Log.d(TAG,"Adding new socket event listener $event")
+            Log.d(TAG, "Adding new socket event listener $event")
             eventListeners[event] = listener
             if (::socket.isInitialized && socket.connected()) {
                 socket.on(event) { args ->
@@ -113,4 +115,19 @@ class SocketServiceImpl(
         listener?.invoke(data)
     }
 
+    private fun registerOnlineStatusListeners() {
+        socket.on(SocketEvent.EVENT_APP_CONNECTED.name) { args ->
+            val connectId = args.getOrNull(0) as? String ?: return@on
+            CoroutineScope(Dispatchers.IO).launch {
+                connectedAppRepository.updateOnlineStatus(connectId, true)
+            }
+        }
+
+            socket.on(SocketEvent.EVENT_APP_DISCONNECTED.name) { args ->
+                val connectId = args.getOrNull(0) as? String ?: return@on
+            CoroutineScope(Dispatchers.IO).launch {
+                connectedAppRepository.updateOnlineStatus(connectId, false)
+            }
+        }
+    }
 }

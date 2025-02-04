@@ -6,6 +6,7 @@ import com.example.hybridconnect.domain.model.ConnectedApp
 fun ConnectedApp.toEntity(): ConnectedAppEntity {
     return ConnectedAppEntity(
         connectId = this.connectId,
+        appName = this.appName,
         isOnline = this.isOnline,
         messagesSent = this.messagesSent
     )

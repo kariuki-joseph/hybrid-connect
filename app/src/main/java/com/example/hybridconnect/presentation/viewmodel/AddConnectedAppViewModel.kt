@@ -1,13 +1,11 @@
 package com.example.hybridconnect.presentation.viewmodel
 
-import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.hybridconnect.domain.model.Agent
-import com.example.hybridconnect.domain.repository.AuthRepository
-import com.example.hybridconnect.domain.usecase.LoginCoordinator
+import com.example.hybridconnect.domain.model.ConnectedApp
+import com.example.hybridconnect.domain.repository.ConnectedAppRepository
+import com.example.hybridconnect.domain.services.SocketService
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,81 +15,81 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AddConnectedAppViewModel @Inject constructor(
-    private val loginCoordinator: LoginCoordinator,
-    private val authRepository: AuthRepository
+    private val connectedAppRepository: ConnectedAppRepository,
+    private val socketService: SocketService,
 ) : ViewModel() {
-    val agent: StateFlow<Agent?> = authRepository.agent
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
-    private val _loginSuccess = MutableStateFlow(false)
-    val loginSuccess: StateFlow<Boolean> = _loginSuccess
+    private val _connectSuccess = MutableStateFlow(false)
+    val connectSuccess: StateFlow<Boolean> = _connectSuccess
 
-    private val _email = MutableStateFlow("")
-    val email: StateFlow<String> = _email.asStateFlow()
+    private val _connectId = MutableStateFlow("")
+    val connectId: StateFlow<String> = _connectId.asStateFlow()
 
-    private val _pin = MutableStateFlow("")
-    val pin: StateFlow<String> = _pin
+    private val _appName = MutableStateFlow("")
+    val appName: StateFlow<String> = _appName.asStateFlow()
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
-    fun onDeletePin() {
-        _pin.value = _pin.value.dropLast(1)
+    fun onConnectIdChanged(connectId: String) {
+        _connectId.value = connectId
     }
 
-    fun onEmailChanged(email: String) {
-        if (_errorMessage.value != null) _errorMessage.value = null
-        _email.value = email
+    fun onAppNameChanged(appName: String){
+        _appName.value = appName
     }
 
-    fun validateEmail(): Boolean {
-        if (_email.value.isEmpty()) {
-            _errorMessage.value = "You have not entered your email"
-            return false
-        }
-        if (!Patterns.EMAIL_ADDRESS.matcher(_email.value).matches()) {
-            _errorMessage.value = "Invalid email address"
-            return false
-        }
-        return true
-    }
 
-    fun onNumberClick(number: String) {
-        if (errorMessage.value != null) return
+    fun attemptConnect() {
+        val connectId = _connectId.value
+        val appName = _appName.value
 
-        if (_pin.value.length < 4) {
-            _pin.value += number
-        }
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                validateConnectId(connectId)
+                validateAppName(appName)
+                val canConnect = connectedAppRepository.checkCanConnectToApp(connectId)
+                if (!canConnect) {
+                    throw Exception("You are only allowed to connect to your apps. Please confirm your account is active in the device with this ConnectID")
+                }
+                
+                val connectedApp = ConnectedApp(
+                    connectId, isOnline = true,
+                    appName = appName,
+                )
 
-        if (_pin.value.length == 4) {
-            viewModelScope.launch(Dispatchers.IO) {
-                attemptLogin()
+                connectedAppRepository.addConnectedApp(connectedApp)
+            } catch (e: Exception) {
+                _isLoading.value = false
+                _errorMessage.value = e.message
+                _connectSuccess.value = false
+                resetErrorMessage()
             }
         }
     }
 
-    private suspend fun attemptLogin() {
-        val pin = _pin.value
-        try {
-            _isLoading.value = true
-            loginCoordinator(_email.value, pin)
-            _loginSuccess.value = true
-
-        } catch (e: Exception) {
-            _errorMessage.value = e.message
-            _loginSuccess.value = false
-            resetErrorMessage()
-        } finally {
-            _isLoading.value = false
+    private fun validateConnectId(connectId: String) {
+        if(connectId.length < 5){
+            throw Exception("ConnectID is too short")
+        }
+        if(connectId.length > 5){
+            throw Exception("Invalid ConnectID")
         }
     }
 
-    private fun resetErrorMessage() {
+    private fun validateAppName(appName: String) {
+        if(appName.length <= 3){
+            throw Exception("App name should be at least 3 characters long")
+        }
+    }
+
+    fun resetErrorMessage() {
         viewModelScope.launch {
             delay(2000)
-            _pin.value = ""
             _errorMessage.value = null
         }
     }

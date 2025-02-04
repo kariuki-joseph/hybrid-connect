@@ -57,6 +57,7 @@ class MainActivity : ComponentActivity() {
         val permissions = arrayListOf(
             android.Manifest.permission.READ_SMS,
             android.Manifest.permission.RECEIVE_SMS,
+            android.Manifest.permission.READ_PHONE_STATE,
         )
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {

@@ -11,10 +11,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddBox
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.material3.AlertDialog
@@ -34,6 +37,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -55,6 +59,7 @@ fun HomeScreen(
     val agentFirstName by viewModel.agentFirstName.collectAsState()
     val greetings by viewModel.greetings.collectAsState()
     val isAppActive by viewModel.isAppActive.collectAsState()
+    val isConnected by viewModel.isConnected.collectAsState()
     val connectedApps by viewModel.connectedApps.collectAsState()
     val isDeletingApp by viewModel.isDeletingApp.collectAsState()
     var showStopAppWarningDialog by remember { mutableStateOf(false) }
@@ -114,6 +119,16 @@ fun HomeScreen(
                         horizontalArrangement = Arrangement.End
                     ) {
                         IconButton(
+                            onClick = { viewModel.toggleOnlineState() }
+                        ){
+                            Icon(
+                                imageVector = if (isConnected) Icons.Default.Wifi else Icons.Default.WifiOff,
+                                contentDescription = if (isAppActive) "Wifi Off" else "Wifi On",
+                                tint = if (isConnected) Color.Green else MaterialTheme.colorScheme.error
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        IconButton(
                             onClick = {
                                 navController.navigate(Route.AddConnectedApp.name)
                             }
@@ -162,8 +177,8 @@ fun HomeScreen(
                 .padding(bottom = 32.dp, end = 32.dp)
         ) {
             Icon(
-                imageVector = if (isAppActive) Icons.Default.Wifi else Icons.Default.WifiOff,
-                contentDescription = if (isAppActive) "Wifi Off" else "Wifi On"
+                imageVector = if (isAppActive) Icons.Default.Stop else Icons.Default.PlayArrow,
+                contentDescription = if (isAppActive) "Stop App" else "Start App"
             )
         }
     }

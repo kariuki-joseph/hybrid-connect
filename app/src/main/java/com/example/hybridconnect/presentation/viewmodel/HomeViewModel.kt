@@ -12,6 +12,7 @@ import com.example.hybridconnect.domain.repository.AuthRepository
 import com.example.hybridconnect.domain.repository.ConnectedAppRepository
 import com.example.hybridconnect.domain.repository.PrefsRepository
 import com.example.hybridconnect.domain.services.SmsProcessingService
+import com.example.hybridconnect.domain.services.SocketService
 import com.example.hybridconnect.domain.usecase.LogoutUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -37,6 +38,7 @@ class HomeViewModel @Inject constructor(
     private val prefsRepository: PrefsRepository,
     private val logoutUserUseCase: LogoutUserUseCase,
     private val connectedAppRepository: ConnectedAppRepository,
+    private val socketService: SocketService,
 ) : ViewModel() {
     private val _connectedApps = MutableStateFlow<List<ConnectedApp>>(emptyList())
     val connectedApps: StateFlow<List<ConnectedApp>> = _connectedApps.asStateFlow()
@@ -63,17 +65,14 @@ class HomeViewModel @Inject constructor(
 
     private val _isDeletingApp = MutableStateFlow(false)
     val isDeletingApp: StateFlow<Boolean> = _isDeletingApp.asStateFlow()
+    
+    val isConnected: StateFlow<Boolean> = socketService.isConnected
 
     init {
         loadAgent()
         loadConnectedApps()
         createGreetings()
         startGreetingTimer()
-    }
-
-    private fun stopCountdownTimer() {
-        countdownJob?.cancel()
-        countdownJob = null
     }
 
     private fun loadAgent() {
@@ -125,6 +124,16 @@ class HomeViewModel @Inject constructor(
                 prefsRepository.setAppActive(false)
                 stopService()
                 _snackbarMessage.value = "Requests processing has been paused"
+            }
+        }
+    }
+
+    fun toggleOnlineState(){
+        viewModelScope.launch {
+            if(isConnected.value){
+                socketService.disconnect()
+            } else {
+                socketService.connect()
             }
         }
     }

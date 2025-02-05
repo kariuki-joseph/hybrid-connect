@@ -10,6 +10,7 @@ import com.example.hybridconnect.domain.repository.TransactionRepository
 import com.example.hybridconnect.domain.services.SocketService
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 
@@ -39,6 +40,7 @@ class MessageForwardingWorker(
 
                 if (activeApps.isEmpty()) {
                     Log.e(TAG, "No connected apps available to process transactions")
+                    delay(3000)
                     continue
                 }
 

@@ -9,12 +9,10 @@ import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.hybridconnect.R
-import com.example.hybridconnect.domain.enums.SocketEvent
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.json.JSONObject
 import javax.inject.Inject
 
 private const val TAG = "SmsProcessingService"
@@ -27,14 +25,12 @@ class SmsProcessingService : Service() {
 
     @Inject
     lateinit var smsProcessor: SmsProcessor
-    @Inject lateinit var socketService: SocketService
 
     private val serviceScope = CoroutineScope(Dispatchers.IO)
 
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
-        socketService.connect()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -63,7 +59,6 @@ class SmsProcessingService : Service() {
         startForeground(1, notification)
     }
 
-
     override fun onBind(intent: Intent?): IBinder? {
         return null
     }
@@ -76,10 +71,5 @@ class SmsProcessingService : Service() {
         )
         val manager = getSystemService(NotificationManager::class.java)
         manager?.createNotificationChannel(channel)
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        socketService.disconnect()
     }
 }

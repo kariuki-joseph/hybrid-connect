@@ -16,9 +16,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -138,7 +135,7 @@ private fun TransactionItemPreview() {
             id = 1, name = "John Doe", phone = "012345678", accountBalance = 200
         ),
         time = System.currentTimeMillis(),
-        mpesaMessage = "Confirmed You have received",
+        message = "Confirmed You have received",
         responseMessage = "Request Submitted Successfully",
             status = TransactionStatus.UNMATCHED,
         offer = offer

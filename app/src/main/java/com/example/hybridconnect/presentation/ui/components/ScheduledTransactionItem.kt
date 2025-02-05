@@ -135,7 +135,7 @@ private fun ScheduledTransactionItemPreview() {
             accountBalance = 200
         ),
         time = System.currentTimeMillis(),
-        mpesaMessage = "Confirmed You have received",
+        message = "Confirmed You have received",
         responseMessage = "you have been already recommended",
         status = TransactionStatus.FAILED,
         offer = offer

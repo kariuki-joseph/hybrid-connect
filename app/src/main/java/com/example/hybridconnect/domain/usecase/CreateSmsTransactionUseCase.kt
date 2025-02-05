@@ -30,7 +30,7 @@ class CreateSmsTransactionUseCase @Inject constructor(
             id = UUID.randomUUID(),
             amount = offer?.price ?: sms.amount,
             time = sms.time,
-            mpesaMessage = sms.message,
+            message = sms.message,
             status = if (offer == null) TransactionStatus.UNMATCHED else TransactionStatus.SCHEDULED,
             responseMessage = "",
             customer = customer,

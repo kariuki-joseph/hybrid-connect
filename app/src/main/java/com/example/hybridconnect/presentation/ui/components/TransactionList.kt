@@ -82,7 +82,7 @@ private fun TransactionListPreview() {
         Transaction(
             id = UUID.randomUUID(),
             amount = 500,
-            mpesaMessage = "Payment received for Order #123",
+            message = "Payment received for Order #123",
             responseMessage = "Transaction successful",
             status = TransactionStatus.FAILED,
             time = System.currentTimeMillis(),
@@ -104,7 +104,7 @@ private fun TransactionListPreview() {
         Transaction(
             id = UUID.randomUUID(),
             amount = 1000,
-            mpesaMessage = "Payment received for Order #124",
+            message = "Payment received for Order #124",
             responseMessage = "Transaction successful",
             status = TransactionStatus.SUCCESS,
             time = System.currentTimeMillis(),
@@ -126,7 +126,7 @@ private fun TransactionListPreview() {
         Transaction(
             id = UUID.randomUUID(),
             amount = 750,
-            mpesaMessage = "Payment for electricity bill",
+            message = "Payment for electricity bill",
             responseMessage = "Transaction successful",
             status = TransactionStatus.SUCCESS,
             time = System.currentTimeMillis(),
@@ -141,7 +141,7 @@ private fun TransactionListPreview() {
         Transaction(
             id = UUID.randomUUID(),
             amount = 200,
-            mpesaMessage = "Airtime purchase",
+            message = "Airtime purchase",
             responseMessage = "Transaction successful",
             status = TransactionStatus.SUCCESS,
             time = System.currentTimeMillis(),
@@ -163,7 +163,7 @@ private fun TransactionListPreview() {
         Transaction(
             id = UUID.randomUUID(),
             amount = 1500,
-            mpesaMessage = "Payment for Order #125",
+            message = "Payment for Order #125",
             responseMessage = "Transaction scheduled",
             status = TransactionStatus.SCHEDULED,
             time = System.currentTimeMillis(),

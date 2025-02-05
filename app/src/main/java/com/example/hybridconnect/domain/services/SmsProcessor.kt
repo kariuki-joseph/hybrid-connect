@@ -1,17 +1,15 @@
 package com.example.hybridconnect.domain.services
 
 import android.util.Log
-import com.example.hybridconnect.domain.enums.SocketEvent
 import com.example.hybridconnect.domain.exception.InvalidMessageFormatException
 import com.example.hybridconnect.domain.exception.RecommendationTimedOutException
-import com.example.hybridconnect.domain.repository.ConnectedAppRepository
+import com.example.hybridconnect.domain.repository.TransactionRepository
 import com.example.hybridconnect.domain.usecase.ExtractMessageDetailsUseCase
+import com.example.hybridconnect.domain.usecase.ForwardMessagesUseCase
 import com.example.hybridconnect.domain.usecase.ValidateMessageUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import org.json.JSONObject
 import javax.inject.Inject
 
 private const val TAG = "SmsProcessor"
@@ -19,20 +17,19 @@ private const val TAG = "SmsProcessor"
 class SmsProcessor @Inject constructor(
     private val validateMessageUseCase: ValidateMessageUseCase,
     private val extractMessageDetailsUseCase: ExtractMessageDetailsUseCase,
-    private val connectedAppRepository: ConnectedAppRepository,
-    private val socketService: SocketService,
+    private val transactionRepository: TransactionRepository,
+    private val forwardMessagesUseCase: ForwardMessagesUseCase,
 ) {
-    private var lastAssignedIndex = -1
-
     fun processMessage(message: String, sender: String, simSlot: Int) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 validateMessageUseCase(message, sender, simSlot)
                 val sms = extractMessageDetailsUseCase(message)
-                sendWebSocketMessage(sms.message)
+                val transaction = transactionRepository.createFromMessage(sms.message)
+                forwardMessagesUseCase(transaction)
             } catch (e: RecommendationTimedOutException) {
                 Log.e(TAG, e.message, e)
-                processRecommendationTimeoutMessage(e.phoneNumber)
+                processRecommendationTimeoutMessage(e.msg)
             } catch (e: InvalidMessageFormatException) {
                 println("Invalid message format: ${e.message}")
             } catch (e: Exception) {
@@ -41,26 +38,8 @@ class SmsProcessor @Inject constructor(
         }
     }
 
-    private fun processRecommendationTimeoutMessage(phoneNumber: String) {
-
+    private fun processRecommendationTimeoutMessage(message: String) {
+        val transaction = transactionRepository.createFromMessage(message)
+        forwardMessagesUseCase(transaction)
     }
-
-    private suspend fun sendWebSocketMessage(message: String) {
-        val apps = connectedAppRepository.getConnectedApps().first()
-        val activeApps = apps.filter { it.isOnline }
-
-        if (activeApps.isEmpty()) {
-            Log.e(TAG, "No connected apps available to process the message")
-            return
-        }
-
-        // Move to the next app in a round-robin order
-        lastAssignedIndex = (lastAssignedIndex + 1) % activeApps.size
-        val selectedApp = activeApps[lastAssignedIndex]
-
-        Log.d(TAG, "Sending message to ${selectedApp.connectId}")
-        socketService.sendMessageToApp(selectedApp, message)
-        connectedAppRepository.incrementMessagesSent(selectedApp)
-    }
-
 }

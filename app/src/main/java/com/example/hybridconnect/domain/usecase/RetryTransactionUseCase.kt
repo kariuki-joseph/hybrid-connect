@@ -10,16 +10,11 @@ private const val TAG = "RetryTransactionUseCase"
 class RetryTransactionUseCase @Inject constructor(
     private val updateTransactionStatusUseCase: UpdateTransactionStatusUseCase,
     private val decrementCustomerBalanceUseCase: DecrementCustomerBalanceUseCase,
-    private val dialUssdUseCase: DialUssdUseCase,
+    private val forwardMessagesUseCase: ForwardMessagesUseCase,
 ) {
     suspend operator fun invoke(transaction: Transaction) {
         try {
-            if (transaction.offer == null) {
-                throw Exception("Offer is empty. Could not retry transaction")
-            }
-            updateTransactionStatusUseCase(transaction.id, TransactionStatus.SCHEDULED)
-            decrementCustomerBalanceUseCase(transaction.customer, transaction.offer.price)
-            dialUssdUseCase(transaction)
+
         } catch (e: Exception) {
             Log.e(TAG, e.message.toString())
             throw e

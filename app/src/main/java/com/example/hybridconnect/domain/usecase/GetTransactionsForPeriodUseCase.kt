@@ -8,6 +8,6 @@ class GetTransactionsForPeriodUseCase @Inject constructor(
     private val transactionRepository: TransactionRepository
 ) {
     suspend operator fun invoke(startTime: Long, endTime: Long): List<Transaction> {
-        return transactionRepository.getTransactionsBetween(startTime, endTime)
+        return emptyList()
     }
 }

@@ -11,6 +11,6 @@ class CreateScheduledTransactionUseCase @Inject constructor(
         originalTransaction: Transaction,
         scheduledTransaction: Transaction,
     ) {
-        transactionRepository.createScheduledTransaction(originalTransaction, scheduledTransaction)
+
     }
 }

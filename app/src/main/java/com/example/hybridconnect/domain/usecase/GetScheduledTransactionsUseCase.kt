@@ -9,6 +9,6 @@ class GetScheduledTransactionsUseCase @Inject constructor(
     private val transactionRepository: TransactionRepository
 ) {
     suspend operator fun invoke(parentTransactionId: UUID): List<Transaction>{
-        return transactionRepository.getScheduledTransactionsForTransactionId(parentTransactionId)
+        return emptyList()
     }
 }

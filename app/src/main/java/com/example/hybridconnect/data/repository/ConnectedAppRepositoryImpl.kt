@@ -25,8 +25,16 @@ class ConnectedAppRepositoryImpl @Inject constructor(
     private val prefsRepository: PrefsRepository,
     private val apiService: ApiService,
 ) : ConnectedAppRepository {
-
     private val _connectedAppsFlow = MutableStateFlow<List<ConnectedApp>>(emptyList())
+    private var _lastAssignedIndex: Int = -1
+
+    override val lastAssignedIndex: Int
+        get() = _lastAssignedIndex
+
+    override fun setLastAssignedIndex(index: Int) {
+        _lastAssignedIndex = index
+    }
+
     override suspend fun getConnectedApps(): StateFlow<List<ConnectedApp>> = _connectedAppsFlow
     override suspend fun getConnectedApp(connectId: String): ConnectedApp? {
         try {

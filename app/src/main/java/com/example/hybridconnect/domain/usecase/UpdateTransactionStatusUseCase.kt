@@ -9,6 +9,6 @@ class UpdateTransactionStatusUseCase @Inject constructor(
     private val transactionRepository: TransactionRepository,
 ) {
     suspend operator fun invoke(transactionId: UUID, status: TransactionStatus) {
-        transactionRepository.updateTransactionStatus(transactionId, status)
+
     }
 }

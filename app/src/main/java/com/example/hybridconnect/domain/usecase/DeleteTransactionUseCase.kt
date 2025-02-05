@@ -14,17 +14,6 @@ class DeleteTransactionUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(transactionId: UUID) {
         try {
-            val transaction = transactionRepository.getTransactionById(transactionId)
-                ?: throw Exception("Transaction seems to have already been deleted")
-
-            transactionRepository.deleteTransaction(transactionId)
-            val transactionStatus = transaction.status
-            if (transactionStatus == TransactionStatus.FAILED || transactionStatus == TransactionStatus.UNMATCHED) {
-                val amount =
-                    if (transactionStatus == TransactionStatus.UNMATCHED) transaction.amount else transaction.offer?.price
-                        ?: 0
-                decrementCustomerBalanceUseCase(transaction.customer, amount)
-            }
 
         } catch (e: Exception) {
             Log.e(TAG, e.message.toString())

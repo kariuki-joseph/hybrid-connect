@@ -13,8 +13,7 @@ class GetTransactionUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(transactionId: UUID): Transaction {
         try {
-            return transactionRepository.getTransactionById(transactionId)
-                ?: throw Exception("No transaction with the given ID was found")
+            return Transaction(id = 0)
         } catch (e: Exception) {
             Log.e(TAG, e.message, e)
             throw e

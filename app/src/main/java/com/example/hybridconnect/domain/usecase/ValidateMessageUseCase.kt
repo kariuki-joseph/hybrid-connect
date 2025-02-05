@@ -20,37 +20,9 @@ class ValidateMessageUseCase @Inject constructor(
     suspend operator fun invoke(message: String, sender: String, simSlot: Int) {
         Log.d(TAG, "Params to validate: Sender: $sender, Message: $message, SimSlot: $simSlot")
         validateEnabledSimCards(simSlot)
-        validateEnabledSmsTypes(message)
         checkValidSender(sender, message)
         checkRecommendationTimeoutMessage(message)
-
         checkValidMessage(message)
-    }
-
-    private suspend fun validateEnabledSmsTypes(message: String) {
-        val smsType = getSmsType(message)
-
-        val isAllowed = when (smsType) {
-            SmsType.MPESA -> prefsRepository.getSetting(AppSetting.PROCESS_MPESA_MESSAGES)
-                .toBoolean()
-
-            SmsType.TILL -> prefsRepository.getSetting(AppSetting.PROCESS_TILL_MESSAGES).toBoolean()
-            SmsType.SITE_LINK -> prefsRepository.getSetting(AppSetting.PROCESS_SITE_LINK_MESSAGES)
-                .toBoolean()
-
-            SmsType.RECOMMENDATION_TIMEOUT -> true
-        }
-
-        val errorMessage = when (smsType) {
-            SmsType.MPESA -> "Not allowed to process M-Pesa messages"
-            SmsType.TILL -> "Not allowed to process Till messages"
-            SmsType.SITE_LINK -> "Not allowed to process SiteLink messages"
-            SmsType.RECOMMENDATION_TIMEOUT -> "Not allowed to process recommendation timeout messages"
-        }
-
-        if (!isAllowed) {
-            throw Exception(errorMessage)
-        }
     }
 
     private fun checkValidMessage(message: String) {
@@ -71,8 +43,7 @@ class ValidateMessageUseCase @Inject constructor(
         )
         val match = recommendationTimeoutRegex.find(message)
         if (match != null) {
-            val phoneNumber = match.groupValues[1]
-            throw RecommendationTimedOutException(phoneNumber)
+            throw RecommendationTimedOutException(message)
         }
     }
 

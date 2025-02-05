@@ -4,6 +4,8 @@ import com.example.hybridconnect.domain.model.ConnectedApp
 import kotlinx.coroutines.flow.StateFlow
 
 interface ConnectedAppRepository {
+    val lastAssignedIndex: Int
+    fun setLastAssignedIndex(index: Int)
     suspend fun getConnectedApps(): StateFlow<List<ConnectedApp>>
     suspend fun getConnectedApp(connectId: String): ConnectedApp?
     suspend fun addConnectedApp(connectedApp: ConnectedApp)

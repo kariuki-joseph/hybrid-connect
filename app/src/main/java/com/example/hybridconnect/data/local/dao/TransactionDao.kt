@@ -1,0 +1,22 @@
+package com.example.hybridconnect.data.local.dao
+
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.Query
+import com.example.hybridconnect.data.local.entity.TransactionEntity
+
+@Dao
+interface TransactionDao {
+    @Insert
+    suspend fun insert(transaction: TransactionEntity)
+
+    @Query("SELECT * FROM transactions WHERE id = :id")
+    suspend fun getTransactionById(id: String): TransactionEntity?
+
+    @Query("SELECT * FROM transactions ORDER BY createdAt ASC")
+    suspend fun getTransactions(): List<TransactionEntity>
+
+    @Query("DELETE FROM transactions WHERE id = :id")
+    suspend fun deleteTransaction(id: Int)
+
+}

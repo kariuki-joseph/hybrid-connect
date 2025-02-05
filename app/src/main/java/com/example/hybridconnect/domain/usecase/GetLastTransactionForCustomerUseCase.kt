@@ -13,7 +13,7 @@ class GetLastTransactionForCustomerUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(customer: Customer): Transaction? {
         try {
-            return transactionRepository.getLastTransactionForCustomer(customer)
+            return null
         } catch (e: Exception) {
             Log.e(TAG, e.message, e)
             throw e

@@ -1,6 +1,5 @@
 package com.example.hybridconnect.domain.usecase
 
-import com.example.hybridconnect.domain.enums.TransactionStatus
 import com.example.hybridconnect.domain.enums.SmsType
 import com.example.hybridconnect.domain.enums.TransactionType
 import com.example.hybridconnect.domain.model.Customer
@@ -10,7 +9,6 @@ import com.example.hybridconnect.domain.model.Transaction
 import com.example.hybridconnect.domain.repository.CustomerRepository
 import com.example.hybridconnect.domain.repository.TransactionRepository
 import com.example.hybridconnect.domain.utils.getSmsType
-import java.util.UUID
 import javax.inject.Inject
 
 class CreateSmsTransactionUseCase @Inject constructor(
@@ -27,15 +25,8 @@ class CreateSmsTransactionUseCase @Inject constructor(
         }
 
         val transaction = Transaction(
-            id = UUID.randomUUID(),
-            amount = offer?.price ?: sms.amount,
-            time = sms.time,
-            mpesaMessage = sms.message,
-            status = if (offer == null) TransactionStatus.UNMATCHED else TransactionStatus.SCHEDULED,
-            responseMessage = "",
-            customer = customer,
-            offer = offer,
-            type = transactionType
+            id = 1,
+            message = sms.message,
         )
         transactionRepository.createTransaction(transaction)
         updateLastPurchaseTime(customer)

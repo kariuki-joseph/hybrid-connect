@@ -52,10 +52,10 @@ class TransactionRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun createFromSmsMessage(message: SmsMessage): Transaction {
+    override fun createFromMessage(message: String): Transaction {
         return Transaction(
             id = 0,
-            message = message.message,
+            message = message,
             createdAt = System.currentTimeMillis()
         )
     }

@@ -12,7 +12,6 @@ class CreateTransactionUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(transaction: Transaction): Transaction {
         transactionRepository.createTransaction(transaction)
-        updateLastPurchaseTime(transaction.customer)
         return transaction
     }
 

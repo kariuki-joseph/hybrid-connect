@@ -18,18 +18,18 @@ class SmsProcessor @Inject constructor(
     private val validateMessageUseCase: ValidateMessageUseCase,
     private val extractMessageDetailsUseCase: ExtractMessageDetailsUseCase,
     private val transactionRepository: TransactionRepository,
-    private val forwardMessagesUseCase: ForwardMessagesUseCase
+    private val forwardMessagesUseCase: ForwardMessagesUseCase,
 ) {
     fun processMessage(message: String, sender: String, simSlot: Int) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 validateMessageUseCase(message, sender, simSlot)
                 val sms = extractMessageDetailsUseCase(message)
-                val transaction = transactionRepository.createFromSmsMessage(sms)
+                val transaction = transactionRepository.createFromMessage(sms.message)
                 forwardMessagesUseCase(transaction)
             } catch (e: RecommendationTimedOutException) {
                 Log.e(TAG, e.message, e)
-                processRecommendationTimeoutMessage(e.phoneNumber)
+                processRecommendationTimeoutMessage(e.msg)
             } catch (e: InvalidMessageFormatException) {
                 println("Invalid message format: ${e.message}")
             } catch (e: Exception) {
@@ -38,7 +38,8 @@ class SmsProcessor @Inject constructor(
         }
     }
 
-    private fun processRecommendationTimeoutMessage(phoneNumber: String) {
-
+    private fun processRecommendationTimeoutMessage(message: String) {
+        val transaction = transactionRepository.createFromMessage(message)
+        forwardMessagesUseCase(transaction)
     }
 }

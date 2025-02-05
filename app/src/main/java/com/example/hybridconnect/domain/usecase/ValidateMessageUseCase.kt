@@ -71,8 +71,7 @@ class ValidateMessageUseCase @Inject constructor(
         )
         val match = recommendationTimeoutRegex.find(message)
         if (match != null) {
-            val phoneNumber = match.groupValues[1]
-            throw RecommendationTimedOutException(phoneNumber)
+            throw RecommendationTimedOutException(message)
         }
     }
 

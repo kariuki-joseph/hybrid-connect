@@ -1,6 +1,5 @@
 package com.example.hybridconnect.domain.repository
 
-import com.example.hybridconnect.domain.model.SmsMessage
 import com.example.hybridconnect.domain.model.Transaction
 import kotlinx.coroutines.flow.StateFlow
 import java.util.concurrent.PriorityBlockingQueue
@@ -14,5 +13,5 @@ interface TransactionRepository {
 
     suspend fun deleteTransaction(id: Int)
 
-    fun createFromSmsMessage(message: SmsMessage): Transaction
+    fun createFromMessage(message: String): Transaction
 }

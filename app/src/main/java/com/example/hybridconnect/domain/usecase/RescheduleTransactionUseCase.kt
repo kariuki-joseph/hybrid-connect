@@ -17,19 +17,6 @@ class RescheduleTransactionUseCase @Inject constructor(
     ) {
     suspend operator fun invoke(originalTransaction: Transaction, newOffer: Offer, time: Long) {
         try {
-            val scheduledTransaction = originalTransaction.copy(
-                status = TransactionStatus.RESCHEDULED,
-                offer = newOffer,
-                rescheduleInfo = RescheduleInfo(time = time)
-            )
-
-            deleteTransactionUseCase(originalTransaction.id)
-            createTransactionUseCase(scheduledTransaction)
-            forwardMessagesUseCase(scheduledTransaction, time)
-            updateTransactionStatusUseCase(
-                scheduledTransaction.id,
-                TransactionStatus.RESCHEDULED
-            )
         } catch (e: Exception) {
             Log.d(TAG, e.message, e)
             throw e

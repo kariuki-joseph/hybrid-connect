@@ -8,6 +8,6 @@ class UpdateTransactionResponseUseCase @Inject constructor(
     private val transactionRepository: TransactionRepository,
 ) {
     suspend operator fun invoke(transactionId: UUID, response: String) {
-        transactionRepository.updateTransactionResponse(transactionId, response)
+
     }
 }

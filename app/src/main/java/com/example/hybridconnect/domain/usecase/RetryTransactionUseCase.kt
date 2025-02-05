@@ -14,12 +14,7 @@ class RetryTransactionUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(transaction: Transaction) {
         try {
-            if (transaction.offer == null) {
-                throw Exception("Offer is empty. Could not retry transaction")
-            }
-            updateTransactionStatusUseCase(transaction.id, TransactionStatus.SCHEDULED)
-            decrementCustomerBalanceUseCase(transaction.customer, transaction.offer.price)
-            forwardMessagesUseCase(transaction)
+
         } catch (e: Exception) {
             Log.e(TAG, e.message.toString())
             throw e

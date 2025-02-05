@@ -9,6 +9,6 @@ class GetTransactionsForCustomerUseCase @Inject constructor(
    private val transactionRepository: TransactionRepository
 ) {
     suspend operator fun invoke(customer: Customer): List<Transaction>{
-        return transactionRepository.getTransactionsForCustomer(customer)
+        return emptyList()
     }
 }

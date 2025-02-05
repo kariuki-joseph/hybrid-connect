@@ -13,7 +13,6 @@ class DeleteCustomerUseCase @Inject constructor (
 ) {
     suspend operator fun invoke(customer: Customer){
         try {
-        transactionRepository.deleteTransactionsForCustomer(customer)
             customerRepository.deleteCustomer(customer)
         }catch(e: Exception){
             Log.e(TAG, e.message.toString())

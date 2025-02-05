@@ -148,4 +148,13 @@ object DomainModule {
     fun providePermissionHandlerUseCase(@ApplicationContext context: Context): PermissionHandlerUseCase {
         return PermissionHandlerUseCase(context)
     }
+
+    @Provides
+    @Singleton
+    fun provideForwardMessagesUseCase(
+        @ApplicationContext context: Context,
+        transactionRepository: TransactionRepository
+    ): ForwardMessagesUseCase {
+        return ForwardMessagesUseCase(context, transactionRepository)
+    }
 }

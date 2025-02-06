@@ -10,6 +10,7 @@ import com.example.hybridconnect.domain.repository.TransactionRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.last
 import java.util.concurrent.PriorityBlockingQueue
 import javax.inject.Inject
 
@@ -21,10 +22,14 @@ class TransactionRepositoryImpl @Inject constructor(
     private val _transactions = MutableStateFlow<List<Transaction>>(emptyList())
     override val transactionQueue = PriorityBlockingQueue<Transaction>()
 
+    private val _queueSize = MutableStateFlow(0)
+    override val queueSize: StateFlow<Int> = _queueSize.asStateFlow()
+
     override suspend fun createTransaction(transaction: Transaction) {
         try {
             transactionDao.insert(transaction.toEntity())
             _transactions.value += transaction
+            _queueSize.value = transactionQueue.size
         } catch (e: Exception) {
             Log.e(TAG, e.message, e)
             throw e
@@ -46,6 +51,7 @@ class TransactionRepositoryImpl @Inject constructor(
         try {
             transactionDao.deleteTransaction(id)
             _transactions.value = _transactions.value.filter { it.id != id }
+            _queueSize.value = transactionQueue.size
         } catch (e: Exception) {
             Log.e(TAG, e.message.toString())
             throw e

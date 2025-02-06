@@ -7,6 +7,8 @@ import java.util.concurrent.PriorityBlockingQueue
 interface TransactionRepository {
     val transactionQueue: PriorityBlockingQueue<Transaction>
 
+    val queueSize: StateFlow<Int>
+
     suspend fun createTransaction(transaction: Transaction)
 
     suspend fun getTransactions(): StateFlow<List<Transaction>>

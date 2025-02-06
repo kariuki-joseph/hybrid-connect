@@ -11,6 +11,7 @@ import com.example.hybridconnect.domain.model.ConnectedApp
 import com.example.hybridconnect.domain.repository.AuthRepository
 import com.example.hybridconnect.domain.repository.ConnectedAppRepository
 import com.example.hybridconnect.domain.repository.PrefsRepository
+import com.example.hybridconnect.domain.repository.TransactionRepository
 import com.example.hybridconnect.domain.services.SmsProcessingService
 import com.example.hybridconnect.domain.services.SocketService
 import com.example.hybridconnect.domain.usecase.LogoutUserUseCase
@@ -39,6 +40,7 @@ class HomeViewModel @Inject constructor(
     private val logoutUserUseCase: LogoutUserUseCase,
     private val connectedAppRepository: ConnectedAppRepository,
     private val socketService: SocketService,
+    private val transactionRepository: TransactionRepository
 ) : ViewModel() {
     private val _connectedApps = MutableStateFlow<List<ConnectedApp>>(emptyList())
     val connectedApps: StateFlow<List<ConnectedApp>> = _connectedApps.asStateFlow()
@@ -46,8 +48,6 @@ class HomeViewModel @Inject constructor(
     val isAppActive: StateFlow<Boolean> = prefsRepository.isAppActive
 
     private val agent: StateFlow<Agent?> = authRepository.agent
-
-    private var countdownJob: Job? = null
 
     val agentFirstName: StateFlow<String?> = agent.map { agent ->
         agent?.firstName
@@ -67,6 +67,8 @@ class HomeViewModel @Inject constructor(
     val isDeletingApp: StateFlow<Boolean> = _isDeletingApp.asStateFlow()
     
     val isConnected: StateFlow<Boolean> = socketService.isConnected
+
+    val queueSize: StateFlow<Int> = transactionRepository.queueSize
 
     init {
         loadAgent()

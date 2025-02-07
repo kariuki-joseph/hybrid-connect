@@ -7,10 +7,13 @@ import com.example.hybridconnect.data.mappers.toEntity
 import com.example.hybridconnect.domain.model.SmsMessage
 import com.example.hybridconnect.domain.model.Transaction
 import com.example.hybridconnect.domain.repository.TransactionRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.last
+import kotlinx.coroutines.launch
 import java.util.concurrent.PriorityBlockingQueue
 import javax.inject.Inject
 
@@ -25,11 +28,15 @@ class TransactionRepositoryImpl @Inject constructor(
     private val _queueSize = MutableStateFlow(0)
     override val queueSize: StateFlow<Int> = _queueSize.asStateFlow()
 
+    init {
+        updateTransactionSize()
+    }
+
     override suspend fun createTransaction(transaction: Transaction) {
         try {
             transactionDao.insert(transaction.toEntity())
             _transactions.value += transaction
-            _queueSize.value = transactionQueue.size
+            updateTransactionSize()
         } catch (e: Exception) {
             Log.e(TAG, e.message, e)
             throw e
@@ -51,7 +58,7 @@ class TransactionRepositoryImpl @Inject constructor(
         try {
             transactionDao.deleteTransaction(id)
             _transactions.value = _transactions.value.filter { it.id != id }
-            _queueSize.value = transactionQueue.size
+            updateTransactionSize()
         } catch (e: Exception) {
             Log.e(TAG, e.message.toString())
             throw e
@@ -64,6 +71,14 @@ class TransactionRepositoryImpl @Inject constructor(
             message = message,
             createdAt = System.currentTimeMillis()
         )
+    }
+
+    private fun updateTransactionSize(){
+        CoroutineScope(Dispatchers.IO).launch {
+            val size = transactionDao.getCurrentTransactionSize()
+            _queueSize.value = size
+        }
+
     }
 
 }

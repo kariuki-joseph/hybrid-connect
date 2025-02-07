@@ -72,22 +72,17 @@ fun ConnectedAppComponent(
                     )){
                         append(queueSize.toString())
                     }
-                    append(" ... ")
+                    append(" --> ")
                     withStyle(style = SpanStyle(
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
                     )){
                         append(connectedApp.messagesSent.toString())
                     }
+                    append(" Sent")
                 },
                 style = MaterialTheme.typography.labelSmall.copy(
                     color = MaterialTheme.colorScheme.secondary
                 )
-            )
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                contentDescription = "Sent Messages",
-                modifier = Modifier.size(12.dp),
-                tint = MaterialTheme.colorScheme.secondary
             )
         }
 

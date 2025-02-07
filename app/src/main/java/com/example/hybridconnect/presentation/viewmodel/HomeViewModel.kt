@@ -2,6 +2,7 @@ package com.example.hybridconnect.presentation.viewmodel
 
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -13,6 +14,7 @@ import com.example.hybridconnect.domain.repository.ConnectedAppRepository
 import com.example.hybridconnect.domain.repository.PrefsRepository
 import com.example.hybridconnect.domain.repository.TransactionRepository
 import com.example.hybridconnect.domain.services.SmsProcessingService
+import com.example.hybridconnect.domain.services.SmsProcessor
 import com.example.hybridconnect.domain.services.SocketService
 import com.example.hybridconnect.domain.usecase.LogoutUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -40,7 +42,8 @@ class HomeViewModel @Inject constructor(
     private val logoutUserUseCase: LogoutUserUseCase,
     private val connectedAppRepository: ConnectedAppRepository,
     private val socketService: SocketService,
-    private val transactionRepository: TransactionRepository
+    private val transactionRepository: TransactionRepository,
+    private val smsProcessor: SmsProcessor
 ) : ViewModel() {
     private val _connectedApps = MutableStateFlow<List<ConnectedApp>>(emptyList())
     val connectedApps: StateFlow<List<ConnectedApp>> = _connectedApps.asStateFlow()
@@ -184,5 +187,10 @@ class HomeViewModel @Inject constructor(
     private fun stopService() {
         val serviceIntent = Intent(context, SmsProcessingService::class.java)
         context.stopService(serviceIntent)
+    }
+
+    fun sendMessage(message: String) {
+        Log.d(TAG, "Trying to send message: $message")
+        smsProcessor.processMessage(message,"MPESA", 1)
     }
 }

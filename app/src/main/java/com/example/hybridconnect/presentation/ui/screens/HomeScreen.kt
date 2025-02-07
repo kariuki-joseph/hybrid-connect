@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -38,6 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -46,6 +48,7 @@ import com.example.hybridconnect.domain.utils.SnackbarManager
 import com.example.hybridconnect.presentation.navigation.Route
 import com.example.hybridconnect.presentation.ui.components.ConnectedAppComponent
 import com.example.hybridconnect.presentation.viewmodel.HomeViewModel
+import com.example.hybridconnect.presentation.viewmodel.SmsViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -54,6 +57,7 @@ fun HomeScreen(
     navController: NavHostController,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel(),
+    smsViewModel: SmsViewModel = hiltViewModel()
 ) {
     val scope = rememberCoroutineScope()
     val agentFirstName by viewModel.agentFirstName.collectAsState()
@@ -68,6 +72,7 @@ fun HomeScreen(
     val snackbarMessage by viewModel.snackbarMessage.collectAsState()
     var selectedApp by remember { mutableStateOf<ConnectedApp?>(null) }
     var showConfirmDeleteAppDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     LaunchedEffect(logoutSuccess) {
         if (logoutSuccess) {
@@ -85,6 +90,10 @@ fun HomeScreen(
             SnackbarManager.showMessage(scope, it)
             viewModel.resetSnackbarMessage()
         }
+    }
+
+    LaunchedEffect(true) {
+        smsViewModel.readMPEMASMS(context = context)
     }
 
     Box(
@@ -161,6 +170,35 @@ fun HomeScreen(
                                 showConfirmDeleteAppDialog = true
                             }
                         )
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("M-Pesa Messages")
+                Spacer(modifier = Modifier.height(8.dp))
+                LazyColumn {
+                    items(smsViewModel.messages) { message ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = message,
+                                modifier = Modifier.weight(1f),
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                            Button(
+                                onClick = {
+                                    viewModel.sendMessage(message)
+                                    smsViewModel.removeMessage(message)
+                                          },
+                                modifier = Modifier.padding(start = 8.dp)
+                            ) {
+                                Text(text = "Send")
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
             }

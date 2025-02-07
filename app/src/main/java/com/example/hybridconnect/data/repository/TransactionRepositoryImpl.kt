@@ -54,6 +54,16 @@ class TransactionRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getOldestTransaction(): Transaction? {
+        try {
+            val transaction = transactionDao.getOldestTransaction()
+            return transaction?.toDomain()
+        } catch (e: Exception) {
+            Log.e(TAG, e.message, e)
+            throw e
+        }
+    }
+
     override suspend fun deleteTransaction(id: Int) {
         try {
             transactionDao.deleteTransaction(id)

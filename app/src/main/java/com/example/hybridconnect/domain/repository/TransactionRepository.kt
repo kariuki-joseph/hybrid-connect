@@ -13,6 +13,8 @@ interface TransactionRepository {
 
     suspend fun getTransactions(): StateFlow<List<Transaction>>
 
+    suspend fun getOldestTransaction(): Transaction?
+
     suspend fun deleteTransaction(id: Int)
 
     fun createFromMessage(message: String): Transaction

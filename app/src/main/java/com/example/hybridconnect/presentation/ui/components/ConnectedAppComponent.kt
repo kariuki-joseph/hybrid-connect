@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -32,6 +33,7 @@ import com.example.hybridconnect.domain.model.ConnectedApp
 @Composable
 fun ConnectedAppComponent(
     connectedApp: ConnectedApp,
+    queueSize: Int,
     isDeletingApp: Boolean = false,
     onDeleteApp: (app: ConnectedApp) -> Unit,
 ) {
@@ -60,20 +62,29 @@ fun ConnectedAppComponent(
 
         Spacer(modifier = Modifier.width(8.dp))
 
-        Text(
-            text = buildAnnotatedString {
-                withStyle(style = SpanStyle(
-                    fontWeight = FontWeight.Bold
-                )){
-                    append(connectedApp.messagesSent.toString())
-                }
-                append(" ")
-                append("Messages sent")
-            },
-            style = MaterialTheme.typography.labelSmall.copy(
-                color = MaterialTheme.colorScheme.secondary
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = buildAnnotatedString {
+                    withStyle(style = SpanStyle(
+                        fontWeight = FontWeight.Bold
+                    )){
+                        append(queueSize.toString())
+                    }
+                    append(" --> ")
+                    withStyle(style = SpanStyle(
+                        fontWeight = FontWeight.Bold,
+                    )){
+                        append(connectedApp.messagesSent.toString())
+                    }
+                    append(" Sent")
+                },
+                style = MaterialTheme.typography.labelSmall.copy(
+                    color = MaterialTheme.colorScheme.secondary
+                )
             )
-        )
+        }
 
         Spacer(modifier = Modifier.width(8.dp))
         IconButton(
@@ -116,6 +127,7 @@ private fun ConnectedAppComponentPreview() {
 
     ConnectedAppComponent(
         connectedApp = connectedApp,
+        queueSize = 10,
         onDeleteApp = {}
     )
 }

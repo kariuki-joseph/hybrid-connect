@@ -9,10 +9,8 @@ import com.example.hybridconnect.domain.repository.ConnectedAppRepository
 import com.example.hybridconnect.domain.repository.TransactionRepository
 import com.example.hybridconnect.domain.services.SocketService
 import dagger.hilt.android.EntryPointAccessors
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.withContext
 
 private const val TAG = "MessageForwardingWorker"
 
@@ -33,36 +31,31 @@ class MessageForwardingWorker(
     }
 
     override suspend fun doWork(): Result {
-        return withContext(Dispatchers.IO) {
-            while (transactionRepository.transactionQueue.isNotEmpty()) {
-                val apps = connectedAppRepository.getConnectedApps().first()
-                val activeApps = apps.filter { it.isOnline }
+        while (true) {
+            val transaction = transactionRepository.getOldestTransaction() ?: break
 
-                if (activeApps.isEmpty()) {
-                    Log.e(TAG, "No connected apps available to process transactions")
-                    delay(3000)
-                    continue
-                }
+            val apps = connectedAppRepository.getConnectedApps().first()
+            val activeApps = apps.filter { it.isOnline }
 
-                Log.d(
-                    TAG,
-                    "Processing transaction... Current queue size: ${transactionRepository.transactionQueue.size}"
-                )
-
-                val transaction = transactionRepository.transactionQueue.poll() ?: continue
-
-                try {
-                    sendWebSocketMessage(transaction.message)
-                    transactionRepository.deleteTransaction(transaction.id)
-                } catch (e: Exception) {
-                    Log.e(TAG, "Transaction ${transaction.id} failed, adding it back to queue", e)
-                    transactionRepository.transactionQueue.add(transaction)
-                }
+            if (activeApps.isEmpty()) {
+                Log.e(TAG, "No connected apps available to process transactions")
+                delay(3000)
+                continue
             }
 
-            Log.d(TAG, "All transactions processed successfully.")
-            Result.success()
+            Log.d(TAG, "Processing transaction...")
+
+            try {
+                sendWebSocketMessage(transaction.message)
+                transactionRepository.deleteTransaction(transaction.id)
+            } catch (e: Exception) {
+                Log.e(TAG, "Transaction ${transaction.id} failed, retrying later", e)
+                delay(3000)
+            }
         }
+
+        Log.d(TAG, "All transactions processed successfully.")
+        return Result.success()
     }
 
     private suspend fun sendWebSocketMessage(message: String) {

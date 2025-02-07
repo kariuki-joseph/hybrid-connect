@@ -13,8 +13,14 @@ interface TransactionDao {
     @Query("SELECT * FROM transactions WHERE id = :id")
     suspend fun getTransactionById(id: String): TransactionEntity?
 
+    @Query("SELECT * FROM transactions ORDER BY createdAt ASC LIMIT 1")
+    suspend fun getOldestTransaction(): TransactionEntity?
+
     @Query("SELECT * FROM transactions ORDER BY createdAt ASC")
     suspend fun getTransactions(): List<TransactionEntity>
+
+    @Query("SELECT COUNT(*) FROM transactions")
+    suspend fun getCurrentTransactionSize(): Int
 
     @Query("DELETE FROM transactions WHERE id = :id")
     suspend fun deleteTransaction(id: Int)

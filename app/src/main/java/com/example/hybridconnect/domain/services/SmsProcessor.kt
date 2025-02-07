@@ -26,6 +26,7 @@ class SmsProcessor @Inject constructor(
                 validateMessageUseCase(message, sender, simSlot)
                 val sms = extractMessageDetailsUseCase(message)
                 val transaction = transactionRepository.createFromMessage(sms.message)
+                transactionRepository.createTransaction(transaction)
                 forwardMessagesUseCase(transaction)
             } catch (e: RecommendationTimedOutException) {
                 Log.e(TAG, e.message, e)

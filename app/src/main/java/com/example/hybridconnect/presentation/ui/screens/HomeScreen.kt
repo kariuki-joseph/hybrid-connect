@@ -61,6 +61,7 @@ fun HomeScreen(
     val isAppActive by viewModel.isAppActive.collectAsState()
     val isConnected by viewModel.isConnected.collectAsState()
     val connectedApps by viewModel.connectedApps.collectAsState()
+    val queueSize by viewModel.queueSize.collectAsState()
     val isDeletingApp by viewModel.isDeletingApp.collectAsState()
     var showStopAppWarningDialog by remember { mutableStateOf(false) }
     val logoutSuccess by viewModel.logoutSuccess.collectAsState()
@@ -153,6 +154,7 @@ fun HomeScreen(
                     items(connectedApps) { app ->
                         ConnectedAppComponent(
                             connectedApp = app,
+                            queueSize = queueSize,
                             isDeletingApp = isDeletingApp,
                             onDeleteApp = {
                                 selectedApp = it

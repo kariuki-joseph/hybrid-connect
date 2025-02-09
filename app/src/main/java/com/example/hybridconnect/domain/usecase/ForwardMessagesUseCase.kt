@@ -19,12 +19,9 @@ class ForwardMessagesUseCase @Inject constructor(
 ) {
     operator fun invoke(transaction: Transaction) {
         try {
-            transactionRepository.transactionQueue.add(transaction)
-            Log.d(
-                TAG,
-                "Current transaction queue size: ${transactionRepository.transactionQueue.size}"
-            )
-            val forwardMessagesWork = OneTimeWorkRequestBuilder<MessageForwardingWorker>().build()
+            val forwardMessagesWork = OneTimeWorkRequestBuilder<MessageForwardingWorker>()
+                .addTag("MessageForwardingWork")
+                .build()
             WorkManager.getInstance(context)
                 .enqueueUniqueWork(
                     "MessageForwardingWork",
@@ -34,5 +31,26 @@ class ForwardMessagesUseCase @Inject constructor(
         } catch (e: Exception) {
             Log.d(TAG, e.message, e)
         }
+    }
+
+    fun startMessageForwardingWorker() {
+        val forwardMessagesWork = OneTimeWorkRequestBuilder<MessageForwardingWorker>()
+            .addTag("MessageForwardingWork")
+            .build()
+        WorkManager.getInstance(context)
+            .enqueueUniqueWork(
+                "MessageForwardingWork",
+                ExistingWorkPolicy.REPLACE,
+                forwardMessagesWork
+            )
+        Log.d(TAG, "Message forwarding worker started.")
+    }
+
+    fun cancelMessageForwardingWork() {
+        WorkManager.getInstance(context)
+            .cancelAllWorkByTag("MessageForwardingWork")
+        Log.d(TAG,
+            "Message forwarding worker canceled."
+        )
     }
 }

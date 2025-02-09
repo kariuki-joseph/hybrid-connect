@@ -32,6 +32,8 @@ class MessageForwardingWorker(
 
     override suspend fun doWork(): Result {
         while (true) {
+            val transaction = transactionRepository.getOldestTransaction() ?: break
+
             if(!socketService.isConnected.value){
                 return Result.failure()
             }
@@ -44,7 +46,6 @@ class MessageForwardingWorker(
                 return Result.failure()
             }
 
-            val transaction = transactionRepository.getOldestTransaction() ?: break
             Log.d(TAG, "Processing transaction...")
             try {
                 sendWebSocketMessage(transaction.message)

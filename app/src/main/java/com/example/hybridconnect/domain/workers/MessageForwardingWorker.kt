@@ -32,19 +32,20 @@ class MessageForwardingWorker(
 
     override suspend fun doWork(): Result {
         while (true) {
-            val transaction = transactionRepository.getOldestTransaction() ?: break
+            if(!socketService.isConnected.value){
+                return Result.failure()
+            }
 
             val apps = connectedAppRepository.getConnectedApps().first()
             val activeApps = apps.filter { it.isOnline }
 
             if (activeApps.isEmpty()) {
                 Log.e(TAG, "No connected apps available to process transactions")
-                delay(3000)
-                continue
+                return Result.failure()
             }
 
+            val transaction = transactionRepository.getOldestTransaction() ?: break
             Log.d(TAG, "Processing transaction...")
-
             try {
                 sendWebSocketMessage(transaction.message)
                 transactionRepository.deleteTransaction(transaction.id)
@@ -64,7 +65,7 @@ class MessageForwardingWorker(
 
         if (activeApps.isEmpty()) {
             Log.e(TAG, "No connected apps available to process the message")
-            return
+            throw Exception("No connected apps available to process the message")
         }
 
         // Move to the next app in a round-robin order

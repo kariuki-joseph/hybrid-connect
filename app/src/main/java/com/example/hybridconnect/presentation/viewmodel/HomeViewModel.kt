@@ -14,11 +14,11 @@ import com.example.hybridconnect.domain.repository.PrefsRepository
 import com.example.hybridconnect.domain.repository.TransactionRepository
 import com.example.hybridconnect.domain.services.SmsProcessingService
 import com.example.hybridconnect.domain.services.SocketService
+import com.example.hybridconnect.domain.usecase.ForwardMessagesUseCase
 import com.example.hybridconnect.domain.usecase.LogoutUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -40,7 +40,8 @@ class HomeViewModel @Inject constructor(
     private val logoutUserUseCase: LogoutUserUseCase,
     private val connectedAppRepository: ConnectedAppRepository,
     private val socketService: SocketService,
-    private val transactionRepository: TransactionRepository
+    private val transactionRepository: TransactionRepository,
+    private val forwardMessagesUseCase: ForwardMessagesUseCase,
 ) : ViewModel() {
     private val _connectedApps = MutableStateFlow<List<ConnectedApp>>(emptyList())
     val connectedApps: StateFlow<List<ConnectedApp>> = _connectedApps.asStateFlow()
@@ -65,7 +66,7 @@ class HomeViewModel @Inject constructor(
 
     private val _isDeletingApp = MutableStateFlow(false)
     val isDeletingApp: StateFlow<Boolean> = _isDeletingApp.asStateFlow()
-    
+
     val isConnected: StateFlow<Boolean> = socketService.isConnected
 
     val queueSize: StateFlow<Int> = transactionRepository.queueSize
@@ -75,6 +76,7 @@ class HomeViewModel @Inject constructor(
         loadConnectedApps()
         createGreetings()
         startGreetingTimer()
+        startOnlineStatusCallback()
     }
 
     private fun loadAgent() {
@@ -92,6 +94,16 @@ class HomeViewModel @Inject constructor(
             try {
                 connectedAppRepository.getConnectedApps().collect { apps ->
                     _connectedApps.value = apps
+
+                    apps.any { app ->
+                        if (app.isOnline) {
+                            forwardMessagesUseCase.startMessageForwardingWorker()
+                            true
+                        } else {
+                            forwardMessagesUseCase.cancelMessageForwardingWork()
+                            false
+                        }
+                    }
                 }
             } catch (e: Exception) {
                 _snackbarMessage.value = e.message.toString()
@@ -130,9 +142,9 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun toggleOnlineState(){
+    fun toggleOnlineState() {
         viewModelScope.launch {
-            if(isConnected.value){
+            if (isConnected.value) {
                 socketService.disconnect()
             } else {
                 socketService.connect()
@@ -184,5 +196,17 @@ class HomeViewModel @Inject constructor(
     private fun stopService() {
         val serviceIntent = Intent(context, SmsProcessingService::class.java)
         context.stopService(serviceIntent)
+    }
+
+    private fun startOnlineStatusCallback() {
+        viewModelScope.launch {
+            isConnected.collect { connected ->
+                if (connected) {
+                    forwardMessagesUseCase.startMessageForwardingWorker()
+                } else {
+                    forwardMessagesUseCase.cancelMessageForwardingWork()
+                }
+            }
+        }
     }
 }

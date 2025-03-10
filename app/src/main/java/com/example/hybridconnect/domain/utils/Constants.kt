@@ -12,4 +12,5 @@ object Constants {
     const val KEY_ACCESS_TOKEN = "access_token"
     // settings
     const val IS_APP_ACTIVE = "is_app_active"
+    const val AIRTIME_SUBSCRIPTION_USSD_CODE = "*140*AMT*BH#"
 }

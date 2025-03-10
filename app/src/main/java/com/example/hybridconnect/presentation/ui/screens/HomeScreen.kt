@@ -21,7 +21,6 @@ import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -57,7 +56,7 @@ fun HomeScreen(
     navController: NavHostController,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel(),
-    smsViewModel: SmsViewModel = hiltViewModel()
+    smsViewModel: SmsViewModel = hiltViewModel(),
 ) {
     val scope = rememberCoroutineScope()
     val agentFirstName by viewModel.agentFirstName.collectAsState()
@@ -130,7 +129,7 @@ fun HomeScreen(
                     ) {
                         IconButton(
                             onClick = { viewModel.toggleOnlineState() }
-                        ){
+                        ) {
                             Icon(
                                 imageVector = if (isConnected) Icons.Default.Wifi else Icons.Default.WifiOff,
                                 contentDescription = if (isAppActive) "Wifi Off" else "Wifi On",
@@ -170,35 +169,6 @@ fun HomeScreen(
                                 showConfirmDeleteAppDialog = true
                             }
                         )
-                    }
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("M-Pesa Messages")
-                Spacer(modifier = Modifier.height(8.dp))
-                LazyColumn {
-                    items(smsViewModel.messages) { message ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = message,
-                                modifier = Modifier.weight(1f),
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                            Button(
-                                onClick = {
-                                    viewModel.sendMessage(message)
-                                    smsViewModel.removeMessage(message)
-                                          },
-                                modifier = Modifier.padding(start = 8.dp)
-                            ) {
-                                Text(text = "Send")
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
             }

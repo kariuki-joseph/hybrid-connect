@@ -20,7 +20,7 @@ class SmsViewModel : ViewModel() {
             projection,
             selection,
             selectionArgs,
-            "date DESC LIMIT 500"
+            "date DESC LIMIT 1500"
         )
 
         cursor?.use {

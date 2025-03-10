@@ -7,6 +7,7 @@ import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.hybridconnect.data.local.dao.AgentDao
 import com.example.hybridconnect.data.local.dao.ConnectedAppDao
+import com.example.hybridconnect.data.local.dao.OfferDao
 import com.example.hybridconnect.data.local.dao.PrefsDao
 import com.example.hybridconnect.data.local.dao.TransactionDao
 import com.example.hybridconnect.data.local.database.AppDatabase
@@ -15,11 +16,13 @@ import com.example.hybridconnect.data.local.preferences.SharedPrefsManager
 import com.example.hybridconnect.data.remote.api.ApiService
 import com.example.hybridconnect.data.repository.AuthRepositoryImpl
 import com.example.hybridconnect.data.repository.ConnectedAppRepositoryImpl
+import com.example.hybridconnect.data.repository.OfferRepositoryImpl
 import com.example.hybridconnect.data.repository.PrefsRepositoryImpl
 import com.example.hybridconnect.data.repository.TransactionRepositoryImpl
 import com.example.hybridconnect.domain.enums.AppSetting
 import com.example.hybridconnect.domain.repository.AuthRepository
 import com.example.hybridconnect.domain.repository.ConnectedAppRepository
+import com.example.hybridconnect.domain.repository.OfferRepository
 import com.example.hybridconnect.domain.repository.PrefsRepository
 import com.example.hybridconnect.domain.repository.TransactionRepository
 import com.example.hybridconnect.domain.utils.Constants
@@ -85,6 +88,11 @@ object AppModule {
     }
 
     @Provides
+    fun provideOfferDao(db: AppDatabase): OfferDao {
+        return db.offerDao()
+    }
+
+    @Provides
     fun provideTransactionDao(db: AppDatabase): TransactionDao {
         return db.transactionDao()
     }
@@ -122,6 +130,14 @@ object AppModule {
             prefsRepository = prefsRepository,
             apiService = apiService,
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideOfferRepository(
+        offerDao: OfferDao,
+    ): OfferRepository {
+        return OfferRepositoryImpl(offerDao)
     }
 
     @Provides

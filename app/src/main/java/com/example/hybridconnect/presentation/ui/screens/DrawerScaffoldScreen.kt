@@ -52,6 +52,7 @@ fun DrawerScaffoldScreen(
 
     val items = listOf(
         DrawerItem.Home,
+        DrawerItem.Offers,
         DrawerItem.Settings,
     )
 
@@ -192,9 +193,14 @@ fun handleDrawerItemClick(
             navController.navigate(Route.Home.name)
         }
 
+        is DrawerItem.Offers -> {
+            navController.navigate(Route.Offers.name)
+        }
+
         is DrawerItem.Settings -> {
             navController.navigate(Route.Settings.name)
         }
+
 
         else -> {
             navController.navigate(Route.Home.name)

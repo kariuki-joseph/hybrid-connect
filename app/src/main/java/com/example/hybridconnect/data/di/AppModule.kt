@@ -6,6 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.hybridconnect.data.local.dao.AgentDao
+import com.example.hybridconnect.data.local.dao.AppOfferDao
 import com.example.hybridconnect.data.local.dao.ConnectedAppDao
 import com.example.hybridconnect.data.local.dao.OfferDao
 import com.example.hybridconnect.data.local.dao.PrefsDao
@@ -93,6 +94,11 @@ object AppModule {
     }
 
     @Provides
+    fun provideAppOfferDao(db: AppDatabase): AppOfferDao {
+        return db.appOfferDao()
+    }
+
+    @Provides
     fun provideTransactionDao(db: AppDatabase): TransactionDao {
         return db.transactionDao()
     }
@@ -122,11 +128,13 @@ object AppModule {
     @Singleton
     fun provideConnectedAppRepository(
         connectedAppDao: ConnectedAppDao,
+        appOfferDao: AppOfferDao,
         prefsRepository: PrefsRepository,
         apiService: ApiService,
     ): ConnectedAppRepository {
         return ConnectedAppRepositoryImpl(
             connectedAppDao = connectedAppDao,
+            appOfferDao = appOfferDao,
             prefsRepository = prefsRepository,
             apiService = apiService,
         )

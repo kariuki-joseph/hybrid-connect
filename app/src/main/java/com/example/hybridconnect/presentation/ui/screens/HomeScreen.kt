@@ -70,7 +70,6 @@ fun HomeScreen(
     val logoutSuccess by viewModel.logoutSuccess.collectAsState()
     val snackbarMessage by viewModel.snackbarMessage.collectAsState()
     var selectedApp by remember { mutableStateOf<ConnectedApp?>(null) }
-    var showConfirmDeleteAppDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
     LaunchedEffect(logoutSuccess) {
@@ -163,10 +162,11 @@ fun HomeScreen(
                         ConnectedAppComponent(
                             connectedApp = app,
                             queueSize = queueSize,
-                            isDeletingApp = isDeletingApp,
-                            onDeleteApp = {
-                                selectedApp = it
-                                showConfirmDeleteAppDialog = true
+                            onClick = {
+                                navController.navigate(
+                                    Route.AppDetails.name
+                                        .replace("{connectId}", app.connectId)
+                                )
                             }
                         )
                     }
@@ -208,34 +208,6 @@ fun HomeScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showStopAppWarningDialog = false }) {
-                    Text(text = "Cancel")
-                }
-            }
-        )
-    }
-
-
-    if (showConfirmDeleteAppDialog) {
-        AlertDialog(
-            onDismissRequest = {
-                showConfirmDeleteAppDialog = false
-                selectedApp = null
-            },
-            title = { Text(text = "Delete App") },
-            text = { Text(text = "You won't be able to send messages to this app until you re-connect again") },
-            confirmButton = {
-                TextButton(onClick = {
-                    selectedApp?.let { viewModel.deleteConnectedApp(it) }
-                    showConfirmDeleteAppDialog = false
-                }) {
-                    Text(text = "Delete")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = {
-                    showConfirmDeleteAppDialog = false
-                    selectedApp = null
-                }) {
                     Text(text = "Cancel")
                 }
             }

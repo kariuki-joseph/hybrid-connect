@@ -13,6 +13,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.hybridconnect.presentation.ui.screens.AddConnectedAppScreen
 import com.example.hybridconnect.presentation.ui.screens.AddOfferScreen
+import com.example.hybridconnect.presentation.ui.screens.AppDetailsScreen
 import com.example.hybridconnect.presentation.ui.screens.EditOfferScreen
 import com.example.hybridconnect.presentation.ui.screens.EditProfileScreen
 import com.example.hybridconnect.presentation.ui.screens.HomeScreen
@@ -135,6 +136,12 @@ fun NavGraph(
         }
         composable(Route.AddConnectedApp.name) {
             AddConnectedAppScreen(navController = navController)
+        }
+        composable(Route.AppDetails.name) {
+            val connectId = it.arguments?.getString("connectId")
+            if (connectId != null) {
+                AppDetailsScreen(navController = navController, connectId = connectId)
+            }
         }
         composable(Route.ResetPassword.name) {
             val email = it.arguments?.getString("email") ?: ""

@@ -82,7 +82,6 @@ fun AddOfferScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(horizontal = 16.dp, vertical = 8.dp)
-                .imePadding()
         ) {
             OutlinedTextField(
                 value = offerDetails.offerName,

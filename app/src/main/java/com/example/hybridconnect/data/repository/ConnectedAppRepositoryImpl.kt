@@ -1,7 +1,9 @@
 package com.example.hybridconnect.data.repository
 
 import android.util.Log
+import com.example.hybridconnect.data.local.dao.AppOfferDao
 import com.example.hybridconnect.data.local.dao.ConnectedAppDao
+import com.example.hybridconnect.data.local.entity.AppOfferEntity
 import com.example.hybridconnect.data.mappers.toApiError
 import com.example.hybridconnect.data.mappers.toDomain
 import com.example.hybridconnect.data.mappers.toEntity
@@ -9,6 +11,7 @@ import com.example.hybridconnect.data.remote.api.ApiService
 import com.example.hybridconnect.data.remote.api.request.CheckCanConnectToAppRequest
 import com.example.hybridconnect.domain.enums.AppSetting
 import com.example.hybridconnect.domain.model.ConnectedApp
+import com.example.hybridconnect.domain.model.Offer
 import com.example.hybridconnect.domain.repository.ConnectedAppRepository
 import com.example.hybridconnect.domain.repository.PrefsRepository
 import kotlinx.coroutines.CoroutineScope
@@ -22,6 +25,7 @@ private const val TAG = "ConnectedAppRepository"
 
 class ConnectedAppRepositoryImpl @Inject constructor(
     private val connectedAppDao: ConnectedAppDao,
+    private val appOfferDao: AppOfferDao,
     private val prefsRepository: PrefsRepository,
     private val apiService: ApiService,
 ) : ConnectedAppRepository {
@@ -113,6 +117,47 @@ class ConnectedAppRepositoryImpl @Inject constructor(
             return response.body()?.data?.canConnect ?: false
         } catch (e: Exception) {
             Log.e(TAG, "Error checking canAddConnectedApp", e)
+            throw e
+        }
+    }
+
+    override suspend fun addOffer(app: ConnectedApp, offer: Offer) {
+        try {
+            val appOffer = AppOfferEntity(
+                appId = app.connectId,
+                offerId = offer.id
+            )
+            appOfferDao.addAppOffer(appOffer)
+        } catch (e: Exception) {
+            Log.e(TAG, "addAppOffer", e)
+            throw e
+        }
+    }
+
+    override suspend fun deleteOffer(app: ConnectedApp, offer: Offer) {
+        try {
+            appOfferDao.deleteAppOffer(appId = app.connectId, offerId = offer.id)
+        } catch (e: Exception) {
+            Log.e(TAG, "deleteAppOffer", e)
+            throw e
+        }
+    }
+
+    override suspend fun getAppByOffer(offer: Offer): ConnectedApp? {
+        try {
+            val appId = appOfferDao.getAppByOffer(offerId = offer.id)
+            return appId?.let { this.getConnectedApp(it) }
+        } catch (e: Exception) {
+            Log.e(TAG, "getAppByOffer", e)
+            throw e
+        }
+    }
+
+    override suspend fun getConnectedOffers(connectId: String): List<Offer> {
+        try {
+            return appOfferDao.getOffersByAppId(connectId).map { it.toDomain() }
+        } catch (e: Exception) {
+            Log.e(TAG, "getConnectedOffers", e)
             throw e
         }
     }

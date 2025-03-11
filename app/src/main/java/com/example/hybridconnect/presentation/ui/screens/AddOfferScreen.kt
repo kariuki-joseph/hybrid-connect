@@ -92,14 +92,6 @@ fun AddOfferScreen(
             )
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
-                value = offerDetails.ussdCode,
-                onValueChange = { viewModel.updateOfferDetails(offerDetails.copy(ussdCode = it)) },
-                label = { Text("USSD Code e.g. *188*6*1*BH*1#") },
-                keyboardOptions = KeyboardOptions.Default.copy(capitalization = KeyboardCapitalization.Characters),
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(
                 value = offerDetails.price,
                 onValueChange = { viewModel.updateOfferDetails(offerDetails.copy(price = it)) },
                 keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),

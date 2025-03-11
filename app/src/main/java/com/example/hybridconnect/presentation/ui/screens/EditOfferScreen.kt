@@ -33,7 +33,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -117,14 +116,6 @@ fun EditOfferScreen(
                 value = offerDetails.offerName,
                 onValueChange = { viewModel.updateOfferDetails(offerDetails.copy(offerName = it)) },
                 label = { Text("Offer Name") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(
-                value = offerDetails.ussdCode,
-                onValueChange = { viewModel.updateOfferDetails(offerDetails.copy(ussdCode = it)) },
-                label = { Text("USSD Code e.g. *188*6*1*BH*1#") },
-                keyboardOptions = KeyboardOptions.Default.copy(capitalization = KeyboardCapitalization.Characters),
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(8.dp))

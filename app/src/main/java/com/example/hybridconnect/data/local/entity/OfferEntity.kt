@@ -11,7 +11,7 @@ import java.util.UUID
 data class OfferEntity(
     @PrimaryKey val id: UUID,
     var name: String,
-    var ussdCode: String,
+    var ussdCode: String = "",
     var price: Int,
     @ColumnInfo(defaultValue = "VOICE")
     var type: OfferType,

@@ -51,7 +51,7 @@ fun OfferItem(
     ) {
         Box(
             modifier = Modifier
-                .height(104.dp)
+                .height(100.dp)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -68,17 +68,20 @@ fun OfferItem(
                 Column(
                     modifier = Modifier.padding(16.dp)
                 ) {
+                    Text(
+                        text = offer.name,
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            color = MaterialTheme.colorScheme.primary
+                        ),
+                    )
+                }
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.End
                     ) {
-                        Text(
-                            text = offer.name,
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                color = MaterialTheme.colorScheme.primary
-                            ),
-                        )
-
                         Text(
                             text = "KES ${offer.price}",
                             style = MaterialTheme.typography.titleMedium
@@ -88,29 +91,17 @@ fun OfferItem(
                     Spacer(modifier = Modifier.height(12.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.End
                     ) {
-                        Text(
-                            text = "KES ${offer.ussdCode}",
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                color = MaterialTheme.colorScheme.onSurface
-                            ),
-                            modifier = Modifier.alignByBaseline()
-                        )
                         IconButton(
-                            onClick = { onEditClick(offer) },
-                            modifier = Modifier.size(42.dp)
+                            onClick = { onEditClick(offer) }
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.Edit,
                                 contentDescription = "Edit",
-                                modifier = Modifier
-                                    .size(42.dp)
-                                    .padding(8.dp)
-                                    .alignByBaseline(),
+                                modifier = Modifier.size(20.dp)
                             )
                         }
-
                     }
                 }
             }

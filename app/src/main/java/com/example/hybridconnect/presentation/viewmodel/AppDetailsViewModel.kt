@@ -6,6 +6,7 @@ import com.example.hybridconnect.domain.model.ConnectedApp
 import com.example.hybridconnect.domain.model.Offer
 import com.example.hybridconnect.domain.repository.ConnectedAppRepository
 import com.example.hybridconnect.domain.repository.OfferRepository
+import com.example.hybridconnect.domain.repository.TransactionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,6 +20,7 @@ import javax.inject.Inject
 class AppDetailsViewModel @Inject constructor(
     private val connectedAppRepository: ConnectedAppRepository,
     private val offerRepository: OfferRepository,
+    private val transactionRepository: TransactionRepository
 ) : ViewModel() {
 
     private val _connectedApp = MutableStateFlow<ConnectedApp?>(null)
@@ -35,6 +37,8 @@ class AppDetailsViewModel @Inject constructor(
 
     private val _snackbarMessage = MutableStateFlow<String?>(null)
     val snackbarMessage: StateFlow<String?> = _snackbarMessage
+
+    val queueSize: StateFlow<Int> = transactionRepository.queueSize
 
     fun loadConnectedApp(connectId: String) {
         viewModelScope.launch {

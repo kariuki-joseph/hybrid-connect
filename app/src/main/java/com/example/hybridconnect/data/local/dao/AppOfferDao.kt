@@ -5,6 +5,8 @@ import androidx.room.Insert
 import androidx.room.Query
 import com.example.hybridconnect.data.local.entity.AppOfferEntity
 import com.example.hybridconnect.data.local.entity.OfferEntity
+import com.example.hybridconnect.domain.model.AppOfferCount
+import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 
 @Dao
@@ -32,4 +34,7 @@ interface AppOfferDao {
     """
     )
     suspend fun getOffersByAppId(appId: String): List<OfferEntity>
+
+    @Query("SELECT appId, COUNT(*) as offerCount FROM app_offers GROUP BY appId")
+    fun getAllConnectedOffersCount(): Flow<List<AppOfferCount>>
 }

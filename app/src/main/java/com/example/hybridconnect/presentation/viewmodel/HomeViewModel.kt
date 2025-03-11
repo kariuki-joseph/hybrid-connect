@@ -20,7 +20,6 @@ import com.example.hybridconnect.domain.usecase.LogoutUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -43,7 +42,7 @@ class HomeViewModel @Inject constructor(
     private val connectedAppRepository: ConnectedAppRepository,
     private val socketService: SocketService,
     private val transactionRepository: TransactionRepository,
-    private val smsProcessor: SmsProcessor
+    private val smsProcessor: SmsProcessor,
 ) : ViewModel() {
     private val _connectedApps = MutableStateFlow<List<ConnectedApp>>(emptyList())
     val connectedApps: StateFlow<List<ConnectedApp>> = _connectedApps.asStateFlow()
@@ -68,16 +67,20 @@ class HomeViewModel @Inject constructor(
 
     private val _isDeletingApp = MutableStateFlow(false)
     val isDeletingApp: StateFlow<Boolean> = _isDeletingApp.asStateFlow()
-    
+
     val isConnected: StateFlow<Boolean> = socketService.isConnected
 
     val queueSize: StateFlow<Int> = transactionRepository.queueSize
+
+    private val _connectedOffersCount = MutableStateFlow<Map<String, Int>>(emptyMap())
+    val connectedOffersCount: StateFlow<Map<String, Int>> = _connectedOffersCount.asStateFlow()
 
     init {
         loadAgent()
         loadConnectedApps()
         createGreetings()
         startGreetingTimer()
+        loadConnectedOffersCount()
     }
 
     private fun loadAgent() {
@@ -95,11 +98,29 @@ class HomeViewModel @Inject constructor(
             try {
                 connectedAppRepository.getConnectedApps().collect { apps ->
                     _connectedApps.value = apps
+
+                    val offersCountMap = apps.associate { app ->
+                        app.connectId to connectedAppRepository.getConnectedOffers(app.connectId).size
+                    }
+
+                    _connectedOffersCount.value = offersCountMap
                 }
             } catch (e: Exception) {
                 _snackbarMessage.value = e.message.toString()
             }
 
+        }
+    }
+
+    private fun loadConnectedOffersCount() {
+        viewModelScope.launch {
+            try {
+                connectedAppRepository.getAllConnectedOffersCount().collect { offersCountMap ->
+                    _connectedOffersCount.value = offersCountMap
+                }
+            } catch (e: Exception) {
+                _snackbarMessage.value = e.message
+            }
         }
     }
 
@@ -133,9 +154,9 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun toggleOnlineState(){
+    fun toggleOnlineState() {
         viewModelScope.launch {
-            if(isConnected.value){
+            if (isConnected.value) {
                 socketService.disconnect()
             } else {
                 socketService.connect()
@@ -191,6 +212,6 @@ class HomeViewModel @Inject constructor(
 
     fun sendMessage(message: String) {
         Log.d(TAG, "Trying to send message: $message")
-        smsProcessor.processMessage(message,"MPESA", 1)
+        smsProcessor.processMessage(message, "MPESA", 1)
     }
 }

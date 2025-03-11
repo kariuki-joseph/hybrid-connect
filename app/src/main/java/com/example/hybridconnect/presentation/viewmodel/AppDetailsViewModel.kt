@@ -18,7 +18,7 @@ import javax.inject.Inject
 @HiltViewModel
 class AppDetailsViewModel @Inject constructor(
     private val connectedAppRepository: ConnectedAppRepository,
-    private val offerRepository: OfferRepository
+    private val offerRepository: OfferRepository,
 ) : ViewModel() {
 
     private val _connectedApp = MutableStateFlow<ConnectedApp?>(null)
@@ -30,30 +30,48 @@ class AppDetailsViewModel @Inject constructor(
     private val _selectedOffers = MutableStateFlow<Set<UUID>>(emptySet())
     val selectedOffers: StateFlow<Set<UUID>> = _selectedOffers.asStateFlow()
 
-    private val _connectedOffers = MutableStateFlow<List<Offer>>(emptyList())
-    val connectedOffers: StateFlow<List<Offer>> = _connectedOffers
+    private val _connectedOffers = MutableStateFlow<Set<UUID>>(emptySet())
+    val connectedOffers: StateFlow<Set<UUID>> = _connectedOffers
+
+    private val _snackbarMessage = MutableStateFlow<String?>(null)
+    val snackbarMessage: StateFlow<String?> = _snackbarMessage
 
     fun loadConnectedApp(connectId: String) {
         viewModelScope.launch {
             val connectedAppDeferred = async { connectedAppRepository.getConnectedApp(connectId) }
             val availableOffersDeferred = async { offerRepository.getAllOffers() }
             val connectedOffersDeferred = async { loadConnectedOffers(connectId) }
-
             _connectedApp.value = connectedAppDeferred.await()
             _availableOffers.value = availableOffersDeferred.await()
-            connectedOffersDeferred.await() // Ensures `loadConnectedOffers` completes
+
+            connectedOffersDeferred.await()
         }
     }
 
     private fun loadConnectedOffers(connectId: String) {
         viewModelScope.launch {
-            _connectedOffers.value = connectedAppRepository.getConnectedOffers(connectId)
+            _connectedOffers.value =
+                connectedAppRepository.getConnectedOffers(connectId).map { it.id }.toSet()
         }
     }
 
-    fun toggleOfferSelection(offerId: UUID) {
-        _selectedOffers.value = _selectedOffers.value.toMutableSet().apply {
-            if (contains(offerId)) remove(offerId) else add(offerId)
+    fun toggleOfferSelection(offerId: UUID, isSelected: Boolean) {
+        viewModelScope.launch {
+            try {
+                val app = _connectedApp.value ?: return@launch
+                val offer = _availableOffers.value.find { it.id == offerId }
+                    ?: throw Exception("Offer not found")
+
+                if (isSelected) {
+                    connectedAppRepository.addOffer(app, offer)
+                } else {
+                    connectedAppRepository.deleteOffer(app, offer)
+                }
+
+                loadConnectedOffers(app.connectId)
+            } catch (e: Exception) {
+                _snackbarMessage.value = e.message
+            }
         }
     }
 
@@ -86,5 +104,9 @@ class AppDetailsViewModel @Inject constructor(
         viewModelScope.launch {
             connectedAppRepository.deleteConnectedApp(app)
         }
+    }
+
+    fun resetSnackbarMessage() {
+        _snackbarMessage.value = null
     }
 }

@@ -42,7 +42,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
-import com.example.hybridconnect.domain.model.ConnectedApp
 import com.example.hybridconnect.domain.utils.SnackbarManager
 import com.example.hybridconnect.presentation.navigation.Route
 import com.example.hybridconnect.presentation.ui.components.ConnectedAppComponent
@@ -65,11 +64,10 @@ fun HomeScreen(
     val isConnected by viewModel.isConnected.collectAsState()
     val connectedApps by viewModel.connectedApps.collectAsState()
     val queueSize by viewModel.queueSize.collectAsState()
-    val isDeletingApp by viewModel.isDeletingApp.collectAsState()
+    val connectedOffersCount by viewModel.connectedOffersCount.collectAsState()
     var showStopAppWarningDialog by remember { mutableStateOf(false) }
     val logoutSuccess by viewModel.logoutSuccess.collectAsState()
     val snackbarMessage by viewModel.snackbarMessage.collectAsState()
-    var selectedApp by remember { mutableStateOf<ConnectedApp?>(null) }
     val context = LocalContext.current
 
     LaunchedEffect(logoutSuccess) {
@@ -159,9 +157,11 @@ fun HomeScreen(
                         .weight(1f)
                 ) {
                     items(connectedApps) { app ->
+                        val offersCount = connectedOffersCount[app.connectId] ?: 0
                         ConnectedAppComponent(
                             connectedApp = app,
                             queueSize = queueSize,
+                            connectedOffersCount = offersCount,
                             onClick = {
                                 navController.navigate(
                                     Route.AppDetails.name

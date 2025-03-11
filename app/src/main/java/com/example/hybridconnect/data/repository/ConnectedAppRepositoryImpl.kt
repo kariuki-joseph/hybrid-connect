@@ -16,8 +16,10 @@ import com.example.hybridconnect.domain.repository.ConnectedAppRepository
 import com.example.hybridconnect.domain.repository.PrefsRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -160,5 +162,10 @@ class ConnectedAppRepositoryImpl @Inject constructor(
             Log.e(TAG, "getConnectedOffers", e)
             throw e
         }
+    }
+
+    override fun getAllConnectedOffersCount(): Flow<Map<String, Int>> {
+        return appOfferDao.getAllConnectedOffersCount()
+            .map { list -> list.associate { it.appId to it.offerCount } }
     }
 }

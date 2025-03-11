@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -32,9 +31,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,8 +50,8 @@ import androidx.navigation.NavHostController
 import com.example.hybridconnect.domain.enums.OfferType
 import com.example.hybridconnect.domain.model.ConnectedApp
 import com.example.hybridconnect.domain.model.Offer
+import com.example.hybridconnect.domain.utils.SnackbarManager
 import com.example.hybridconnect.presentation.navigation.Route
-import com.example.hybridconnect.presentation.ui.components.CustomButton
 import com.example.hybridconnect.presentation.viewmodel.AppDetailsViewModel
 import java.util.UUID
 
@@ -64,16 +63,24 @@ fun AppDetailsScreen(
     viewModel: AppDetailsViewModel = hiltViewModel(),
     connectId: String,
 ) {
+    val scope = rememberCoroutineScope()
     val connectedApp by viewModel.connectedApp.collectAsState()
     val availableOffers by viewModel.availableOffers.collectAsState()
-    val selectedOffers by viewModel.selectedOffers.collectAsState()
     val connectedOffers by viewModel.connectedOffers.collectAsState()
+    val snackbarMessage by viewModel.snackbarMessage.collectAsState()
 
     var showConfirmDeleteAppDialog by remember { mutableStateOf(false) }
 
 
     LaunchedEffect(connectId) {
         viewModel.loadConnectedApp(connectId)
+    }
+
+    LaunchedEffect(snackbarMessage) {
+        snackbarMessage?.let {
+            SnackbarManager.showMessage(scope, it)
+            viewModel.resetSnackbarMessage()
+        }
     }
 
     Scaffold(
@@ -100,16 +107,14 @@ fun AppDetailsScreen(
                 AppDetailsScreenContent(
                     connectedApp = app,
                     queueSize = app.messagesSent,
-                    connectedOffersCount = connectedOffers.size,
                     availableOffers = availableOffers,
-                    selectedOffers = selectedOffers.toList(),
-                    onOfferSelectionChange = { offerId, _ ->
+                    connectedOffers = connectedOffers,
+                    onOfferSelectionChange = { offerId, isSelected ->
                         viewModel.toggleOfferSelection(
-                            offerId
+                            offerId, isSelected
                         )
                     },
-                    onSaveClick = { viewModel.saveSelectedOffers() },
-                    onDeleteClick = {
+                    onDeleteApp = {
                         showConfirmDeleteAppDialog = true
                     }
                 )
@@ -148,12 +153,10 @@ fun AppDetailsScreen(
 private fun AppDetailsScreenContent(
     connectedApp: ConnectedApp,
     queueSize: Int,
-    connectedOffersCount: Int = 0,
     availableOffers: List<Offer>,
-    selectedOffers: List<UUID>,
+    connectedOffers: Set<UUID>,
     onOfferSelectionChange: (UUID, Boolean) -> Unit,
-    onSaveClick: () -> Unit,
-    onDeleteClick: () -> Unit = {},
+    onDeleteApp: () -> Unit = {},
 ) {
     val sectionTitles = mapOf(
         OfferType.DATA to "Data Offers",
@@ -182,8 +185,13 @@ private fun AppDetailsScreenContent(
                 },
                 style = MaterialTheme.typography.bodyLarge
             )
-            Spacer(modifier = Modifier.width(8.dp))
-            Dot(isOnline = connectedApp.isOnline)
+            Spacer(modifier = Modifier.weight(1f))
+            Text(
+                text = if (connectedApp.isOnline) "Online" else "Offline",
+                style = MaterialTheme.typography.labelSmall.copy(
+                    color = if (connectedApp.isOnline) Color.Green else MaterialTheme.colorScheme.error
+                )
+            )
         }
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -222,7 +230,7 @@ private fun AppDetailsScreenContent(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = connectedOffersCount.toString(),
+                text = connectedOffers.size.toString(),
                 style = MaterialTheme.typography.labelSmall
             )
 
@@ -268,13 +276,13 @@ private fun AppDetailsScreenContent(
                                     .clickable {
                                         onOfferSelectionChange(
                                             offer.id,
-                                            !selectedOffers.contains(offer.id)
+                                            !connectedOffers.contains(offer.id)
                                         )
                                     }
                                     .padding(vertical = 4.dp)
                             ) {
                                 Checkbox(
-                                    checked = selectedOffers.contains(offer.id),
+                                    checked = connectedOffers.contains(offer.id),
                                     onCheckedChange = { isChecked ->
                                         onOfferSelectionChange(
                                             offer.id,
@@ -294,15 +302,6 @@ private fun AppDetailsScreenContent(
             }
         }
 
-        CustomButton(
-            onClick = onSaveClick,
-            modifier = Modifier
-                .fillMaxWidth()
-        ) {
-            Text(text = "Save")
-        }
-
-
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End
@@ -313,7 +312,7 @@ private fun AppDetailsScreenContent(
                     color = MaterialTheme.colorScheme.error
                 ),
                 modifier = Modifier
-                    .clickable { onDeleteClick() }
+                    .clickable { onDeleteApp() }
                     .padding(horizontal = 8.dp, vertical = 4.dp)
             )
         }
@@ -350,16 +349,15 @@ private fun AppDetailsScreenPreview() {
         Offer(UUID.randomUUID(), "Offer 2", "*456#", 20, OfferType.VOICE)
     )
 
-    val selectedOffers = remember { mutableStateListOf(availableOffers[0].id) }
+    val connectedOffers = remember { mutableSetOf(availableOffers[0].id) }
 
     AppDetailsScreenContent(
         connectedApp = connectedApp,
         queueSize = 15,
         availableOffers = availableOffers,
-        selectedOffers = selectedOffers,
+        connectedOffers = connectedOffers,
         onOfferSelectionChange = { offerId, isSelected ->
-            if (isSelected) selectedOffers.add(offerId) else selectedOffers.remove(offerId)
-        },
-        onSaveClick = { }
+            if (isSelected) connectedOffers.add(offerId) else connectedOffers.remove(offerId)
+        }
     )
 }

@@ -21,18 +21,23 @@ import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.navigation.compose.rememberNavController
+import com.example.hybridconnect.domain.services.SocketService
 import com.example.hybridconnect.presentation.navigation.NavGraph
 import com.example.hybridconnect.presentation.theme.HybridConnectTheme
 import com.example.hybridconnect.presentation.ui.components.GlobalSnackbarHost
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    @Inject
+    lateinit var socketService: SocketService
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         requestPermissions(this)
+        socketService.connect()
         requestBatterOptimizationExemption()
 
         enableEdgeToEdge()

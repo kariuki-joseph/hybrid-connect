@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 3,
-    "identityHash": "e5c3e655a763a039f24ec3c6816bdc11",
+    "identityHash": "dd0cfac33e65f47b5d740b142c926003",
     "entities": [
       {
         "tableName": "preferences",
@@ -149,13 +149,19 @@
       },
       {
         "tableName": "transactions",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `message` TEXT NOT NULL, `createdAt` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `offerId` BLOB, `message` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, FOREIGN KEY(`offerId`) REFERENCES `offers`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
         "fields": [
           {
             "fieldPath": "id",
             "columnName": "id",
             "affinity": "INTEGER",
             "notNull": true
+          },
+          {
+            "fieldPath": "offerId",
+            "columnName": "offerId",
+            "affinity": "BLOB",
+            "notNull": false
           },
           {
             "fieldPath": "message",
@@ -176,8 +182,30 @@
             "id"
           ]
         },
-        "indices": [],
-        "foreignKeys": []
+        "indices": [
+          {
+            "name": "index_transactions_offerId",
+            "unique": false,
+            "columnNames": [
+              "offerId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_transactions_offerId` ON `${TABLE_NAME}` (`offerId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "offers",
+            "onDelete": "SET NULL",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "offerId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
       },
       {
         "tableName": "connected_apps",
@@ -305,7 +333,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'e5c3e655a763a039f24ec3c6816bdc11')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'dd0cfac33e65f47b5d740b142c926003')"
     ]
   }
 }

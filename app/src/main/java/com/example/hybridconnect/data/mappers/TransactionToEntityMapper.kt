@@ -6,6 +6,7 @@ import com.example.hybridconnect.domain.model.Transaction
 fun Transaction.toEntity(): TransactionEntity {
     return TransactionEntity(
         id = this.id,
+        offerId = this.offer?.id,
         message = this.message,
         createdAt = this.createdAt
     )

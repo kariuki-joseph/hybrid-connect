@@ -16,8 +16,8 @@ class CreateSmsTransactionUseCase @Inject constructor(
     private val customerRepository: CustomerRepository,
 ) {
     suspend operator fun invoke(customer: Customer, offer: Offer?, sms: SmsMessage): Transaction {
-        val smsType  = getSmsType(sms.message)
-        val transactionType = when(smsType){
+        val smsType = getSmsType(sms.message)
+        val transactionType = when (smsType) {
             SmsType.MPESA -> TransactionType.MPESA
             SmsType.TILL -> TransactionType.TILL
             SmsType.SITE_LINK -> TransactionType.SITE_LINK
@@ -27,6 +27,7 @@ class CreateSmsTransactionUseCase @Inject constructor(
         val transaction = Transaction(
             id = 1,
             message = sms.message,
+            offer = offer,
         )
         transactionRepository.createTransaction(transaction)
         updateLastPurchaseTime(customer)

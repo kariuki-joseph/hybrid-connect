@@ -12,6 +12,7 @@ import com.example.hybridconnect.domain.services.interfaces.MessageExtractor
 import com.example.hybridconnect.domain.usecase.ExtractMessageDetailsUseCase
 import com.example.hybridconnect.domain.usecase.ForwardMessagesUseCase
 import com.example.hybridconnect.domain.usecase.GetAppStatusUseCase
+import com.example.hybridconnect.domain.usecase.GetOfferByPriceUseCase
 import com.example.hybridconnect.domain.usecase.LoginUserUseCase
 import com.example.hybridconnect.domain.usecase.LogoutUserUseCase
 import com.example.hybridconnect.domain.usecase.PermissionHandlerUseCase
@@ -79,12 +80,14 @@ object DomainModule {
     fun provideSmsProcessor(
         validateMessageUseCase: ValidateMessageUseCase,
         extractMessageDetailsUseCase: ExtractMessageDetailsUseCase,
+        getOfferByPriceUseCase: GetOfferByPriceUseCase,
         transactionRepository: TransactionRepository,
         forwardMessagesUseCase: ForwardMessagesUseCase,
     ): SmsProcessor {
         return SmsProcessor(
             validateMessageUseCase,
             extractMessageDetailsUseCase,
+            getOfferByPriceUseCase,
             transactionRepository,
             forwardMessagesUseCase
         )

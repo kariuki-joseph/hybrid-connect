@@ -152,7 +152,8 @@ object AppModule {
     @Singleton
     fun provideTransactionRepository(
         transactionDao: TransactionDao,
+        offerRepository: OfferRepository,
     ): TransactionRepository {
-        return TransactionRepositoryImpl(transactionDao)
+        return TransactionRepositoryImpl(transactionDao, offerRepository)
     }
 }

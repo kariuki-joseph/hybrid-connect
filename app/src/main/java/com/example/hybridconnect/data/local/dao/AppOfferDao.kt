@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import com.example.hybridconnect.data.local.entity.AppOfferEntity
+import com.example.hybridconnect.data.local.entity.ConnectedAppEntity
 import com.example.hybridconnect.data.local.entity.OfferEntity
 import com.example.hybridconnect.domain.model.AppOfferCount
 import kotlinx.coroutines.flow.Flow
@@ -20,12 +21,11 @@ interface AppOfferDao {
 
     @Query(
         """
-        SELECT appId FROM app_offers 
-        WHERE offerId = :offerId 
-        LIMIT 1
-    """
+        SELECT * FROM connected_apps
+        WHERE connectId IN (SELECT appId FROM app_offers WHERE offerId = :offerId)
+        """
     )
-    suspend fun getAppByOffer(offerId: UUID): String?
+    suspend fun getConnectedAppsByOffer(offerId: UUID): List<ConnectedAppEntity>
 
     @Query(
         """

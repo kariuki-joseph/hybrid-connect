@@ -9,6 +9,7 @@ import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.hybridconnect.R
+import com.example.hybridconnect.domain.model.Transaction
 import com.example.hybridconnect.domain.repository.ConnectedAppRepository
 import com.example.hybridconnect.domain.repository.TransactionRepository
 import dagger.hilt.android.AndroidEntryPoint
@@ -67,7 +68,7 @@ class MessageForwardingService : Service() {
 
             Log.d(TAG, "Processing transaction....")
             try {
-                sendWebsocketMessage(transaction.message)
+                sendWebsocketMessage(transaction)
                 transactionRepository.deleteTransaction(transaction.id)
             } catch (e: Exception) {
                 Log.e(TAG, "Transaction ${transaction.id} failed, retrying later.", e)
@@ -80,8 +81,9 @@ class MessageForwardingService : Service() {
     }
 
 
-    private suspend fun sendWebsocketMessage(message: String) {
-        val apps = connectedAppRepository.getConnectedApps().first()
+    private suspend fun sendWebsocketMessage(transaction: Transaction) {
+        val offer = transaction.offer ?: return
+        val apps = connectedAppRepository.getAppsByOffer(offer)
         val activeApps = apps.filter { it.isOnline }
 
         if (activeApps.isEmpty()) {
@@ -89,13 +91,17 @@ class MessageForwardingService : Service() {
             return
         }
 
-        // Move to the next app in a round-robin order
-        val lastAssignedIndex = (connectedAppRepository.lastAssignedIndex + 1) % activeApps.size
-        val selectedApp = activeApps[lastAssignedIndex]
+        // Fetch the last used index per offer and cycle to the next app
+        val lastUsedIndex = connectedAppRepository.getLastUsedIndexForOffer(offer.id)
+        val nextIndex = (lastUsedIndex + 1) % activeApps.size
+        val selectedApp = activeApps[nextIndex]
+
         Log.d(TAG, "Sending message to ${selectedApp.connectId}")
-        socketService.sendMessageToApp(selectedApp, message)
+        socketService.sendMessageToApp(selectedApp, transaction.message)
+
+        // Update round-robin index per offer
         connectedAppRepository.incrementMessagesSent(selectedApp)
-        connectedAppRepository.setLastAssignedIndex(lastAssignedIndex)
+        connectedAppRepository.setLastUsedIndexForOffer(offer.id, nextIndex)
     }
 
     private fun createNotification(title: String, content: String): Notification {

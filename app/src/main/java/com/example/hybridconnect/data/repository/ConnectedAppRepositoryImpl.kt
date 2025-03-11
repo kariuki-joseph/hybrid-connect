@@ -21,6 +21,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
 private const val TAG = "ConnectedAppRepository"
@@ -32,13 +34,14 @@ class ConnectedAppRepositoryImpl @Inject constructor(
     private val apiService: ApiService,
 ) : ConnectedAppRepository {
     private val _connectedAppsFlow = MutableStateFlow<List<ConnectedApp>>(emptyList())
-    private var _lastAssignedIndex: Int = -1
 
-    override val lastAssignedIndex: Int
-        get() = _lastAssignedIndex
+    private val lastUsedIndexMap = ConcurrentHashMap<UUID, Int>()
+    override fun getLastUsedIndexForOffer(offerId: UUID): Int {
+        return lastUsedIndexMap[offerId] ?: -1 // return -1 if no index is found
+    }
 
-    override fun setLastAssignedIndex(index: Int) {
-        _lastAssignedIndex = index
+    override fun setLastUsedIndexForOffer(offerId: UUID, index: Int) {
+        lastUsedIndexMap[offerId] = index
     }
 
     override suspend fun getConnectedApps(): StateFlow<List<ConnectedApp>> = _connectedAppsFlow
@@ -145,12 +148,11 @@ class ConnectedAppRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getAppByOffer(offer: Offer): ConnectedApp? {
+    override suspend fun getAppsByOffer(offer: Offer): List<ConnectedApp> {
         try {
-            val appId = appOfferDao.getAppByOffer(offerId = offer.id)
-            return appId?.let { this.getConnectedApp(it) }
+            return appOfferDao.getConnectedAppsByOffer(offer.id).map { it.toDomain() }
         } catch (e: Exception) {
-            Log.e(TAG, "getAppByOffer", e)
+            Log.e(TAG, "getAppsByOffer", e)
             throw e
         }
     }

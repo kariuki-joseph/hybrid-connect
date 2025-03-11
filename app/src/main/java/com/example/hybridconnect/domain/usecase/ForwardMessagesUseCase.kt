@@ -9,7 +9,7 @@ import com.example.hybridconnect.domain.services.MessageForwardingService
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
-private const val TAG = "DialUssdUseCase"
+private const val TAG = "ForwardMessagesUseCase"
 
 class ForwardMessagesUseCase @Inject constructor(
     @ApplicationContext private val context: Context,

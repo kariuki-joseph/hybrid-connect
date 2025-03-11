@@ -27,6 +27,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -45,6 +46,7 @@ import androidx.navigation.NavHostController
 import com.example.hybridconnect.domain.utils.SnackbarManager
 import com.example.hybridconnect.presentation.navigation.Route
 import com.example.hybridconnect.presentation.ui.components.ConnectedAppComponent
+import com.example.hybridconnect.presentation.ui.components.CustomButton
 import com.example.hybridconnect.presentation.viewmodel.HomeViewModel
 import com.example.hybridconnect.presentation.viewmodel.SmsViewModel
 import kotlinx.coroutines.Dispatchers
@@ -174,6 +176,14 @@ fun HomeScreen(
             }
         }
 
+//        TestSendComponent(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .align(Alignment.BottomStart)
+//                .padding(start = 16.dp, bottom = 32.dp),
+//            onTestButtonClicked = { viewModel.testButtonClicked(it) }
+//        )
+
         FloatingActionButton(
             onClick = {
                 if (isAppActive) {
@@ -212,5 +222,29 @@ fun HomeScreen(
                 }
             }
         )
+    }
+}
+
+
+@Composable
+fun TestSendComponent(
+    modifier: Modifier = Modifier,
+    onTestButtonClicked: (String) -> Unit,
+) {
+    Row(
+        modifier = modifier
+    ) {
+        var amount by remember { mutableStateOf("5") }
+        TextField(
+            value = amount,
+            onValueChange = { value ->
+                amount = value
+            },
+            modifier = Modifier.width(70.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        CustomButton(onClick = { onTestButtonClicked(amount) }) {
+            Text("Test Send")
+        }
     }
 }

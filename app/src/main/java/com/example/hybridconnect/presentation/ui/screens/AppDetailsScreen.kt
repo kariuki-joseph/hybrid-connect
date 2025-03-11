@@ -68,10 +68,10 @@ fun AppDetailsScreen(
     val availableOffers by viewModel.availableOffers.collectAsState()
     val connectedOffers by viewModel.connectedOffers.collectAsState()
     val snackbarMessage by viewModel.snackbarMessage.collectAsState()
+    val isDeletingApp by viewModel.isDeletingApp.collectAsState()
     val queueSize by viewModel.queueSize.collectAsState()
 
     var showConfirmDeleteAppDialog by remember { mutableStateOf(false) }
-
 
     LaunchedEffect(connectId) {
         viewModel.loadConnectedApp(connectId)

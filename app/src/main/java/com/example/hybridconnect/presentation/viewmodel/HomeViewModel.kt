@@ -65,9 +65,6 @@ class HomeViewModel @Inject constructor(
     private val _snackbarMessage = MutableStateFlow<String?>(null)
     val snackbarMessage: StateFlow<String?> = _snackbarMessage
 
-    private val _isDeletingApp = MutableStateFlow(false)
-    val isDeletingApp: StateFlow<Boolean> = _isDeletingApp.asStateFlow()
-
     val isConnected: StateFlow<Boolean> = socketService.isConnected
 
     val queueSize: StateFlow<Int> = transactionRepository.queueSize
@@ -75,6 +72,7 @@ class HomeViewModel @Inject constructor(
     private val _connectedOffersCount = MutableStateFlow<Map<String, Int>>(emptyMap())
     val connectedOffersCount: StateFlow<Map<String, Int>> = _connectedOffersCount.asStateFlow()
 
+    private var count = 0;
     init {
         loadAgent()
         loadConnectedApps()
@@ -98,17 +96,10 @@ class HomeViewModel @Inject constructor(
             try {
                 connectedAppRepository.getConnectedApps().collect { apps ->
                     _connectedApps.value = apps
-
-                    val offersCountMap = apps.associate { app ->
-                        app.connectId to connectedAppRepository.getConnectedOffers(app.connectId).size
-                    }
-
-                    _connectedOffersCount.value = offersCountMap
                 }
             } catch (e: Exception) {
                 _snackbarMessage.value = e.message.toString()
             }
-
         }
     }
 
@@ -121,20 +112,6 @@ class HomeViewModel @Inject constructor(
             } catch (e: Exception) {
                 _snackbarMessage.value = e.message
             }
-        }
-    }
-
-    fun deleteConnectedApp(connectedApp: ConnectedApp) {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                _isDeletingApp.value = true
-                connectedAppRepository.deleteConnectedApp(connectedApp)
-            } catch (e: Exception) {
-                _snackbarMessage.value = e.message.toString()
-            } finally {
-                _isDeletingApp.value = false
-            }
-
         }
     }
 
@@ -210,8 +187,14 @@ class HomeViewModel @Inject constructor(
         context.stopService(serviceIntent)
     }
 
-    fun sendMessage(message: String) {
+    private fun sendMessage(message: String) {
         Log.d(TAG, "Trying to send message: $message")
         smsProcessor.processMessage(message, "MPESA", 1)
+    }
+
+    fun testButtonClicked(amount: String = "5") {
+        val transactionCode = "TCB49LSF1K${++count}"
+        val message = "$transactionCode Confirmed.You have received Ksh$amount.00 from Joseph  Kariuki 0114662464 on 11/3/25 at 1:21 PM  New M-PESA balance is Ksh9.73. Earn interest daily on Ziidi MMF,Dial *334#"
+        sendMessage(message)
     }
 }

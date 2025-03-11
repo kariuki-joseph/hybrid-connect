@@ -20,7 +20,7 @@ import javax.inject.Inject
 class AppDetailsViewModel @Inject constructor(
     private val connectedAppRepository: ConnectedAppRepository,
     private val offerRepository: OfferRepository,
-    private val transactionRepository: TransactionRepository
+    private val transactionRepository: TransactionRepository,
 ) : ViewModel() {
 
     private val _connectedApp = MutableStateFlow<ConnectedApp?>(null)
@@ -37,6 +37,9 @@ class AppDetailsViewModel @Inject constructor(
 
     private val _snackbarMessage = MutableStateFlow<String?>(null)
     val snackbarMessage: StateFlow<String?> = _snackbarMessage
+
+    private val _isDeletingApp = MutableStateFlow(false)
+    val isDeletingApp: StateFlow<Boolean> = _isDeletingApp.asStateFlow()
 
     val queueSize: StateFlow<Int> = transactionRepository.queueSize
 
@@ -79,34 +82,18 @@ class AppDetailsViewModel @Inject constructor(
         }
     }
 
-    fun saveSelectedOffers() {
-        val app = _connectedApp.value ?: return
-        viewModelScope.launch {
-            val currentOffers = _availableOffers.value.map { it.id }.toSet()
-            val newSelected = _selectedOffers.value
-
-            // Remove unselected offers
-            currentOffers.filter { it !in newSelected }.forEach { offerId ->
-                val offer = _availableOffers.value.find { it.id == offerId }
-                if (offer != null) {
-                    connectedAppRepository.deleteOffer(app, offer)
-                }
-            }
-
-            // Add newly selected offers
-            newSelected.filter { it !in currentOffers }.forEach { offerId ->
-                val offer = _availableOffers.value.find { it.id == offerId }
-                if (offer != null) {
-                    connectedAppRepository.addOffer(app, offer)
-                }
-            }
-        }
-    }
-
     fun deleteConnectedApp() {
         val app = _connectedApp.value ?: return
         viewModelScope.launch {
-            connectedAppRepository.deleteConnectedApp(app)
+            try {
+                _isDeletingApp.value = true
+                connectedAppRepository.deleteConnectedApp(app)
+                _snackbarMessage.value = "App deleted succesfully"
+            } catch (e: Exception) {
+                _snackbarMessage.value = e.message.toString()
+            } finally {
+                _isDeletingApp.value = false
+            }
         }
     }
 

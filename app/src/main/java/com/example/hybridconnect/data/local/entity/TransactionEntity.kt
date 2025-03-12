@@ -1,5 +1,6 @@
 package com.example.hybridconnect.data.local.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
@@ -26,5 +27,6 @@ data class TransactionEntity(
     val offerId: UUID?,
     val message: String = "",
     val createdAt: Long = System.currentTimeMillis(),
-    val forwarded: Boolean = false
+    @ColumnInfo(defaultValue = "false")
+    val forwarded: Boolean = false,
 )

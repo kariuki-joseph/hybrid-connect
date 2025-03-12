@@ -6,7 +6,7 @@ import com.example.hybridconnect.domain.enums.SimCard
 import com.example.hybridconnect.domain.model.Agent
 import com.example.hybridconnect.domain.enums.AppSetting
 import com.example.hybridconnect.domain.repository.AuthRepository
-import com.example.hybridconnect.domain.repository.PrefsRepository
+import com.example.hybridconnect.domain.repository.SettingsRepository
 import com.example.hybridconnect.presentation.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -18,7 +18,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val prefsRepository: PrefsRepository,
+    private val settingsRepository: SettingsRepository,
     private val authRepository: AuthRepository,
 ) : ViewModel() {
 
@@ -58,7 +58,7 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             val settingsMap = mutableMapOf<AppSetting, Boolean>()
             AppSetting.entries.forEach { setting ->
-                val settingValue = prefsRepository.getSetting(setting).toBoolean()
+                val settingValue = settingsRepository.getSetting(setting).toBoolean()
                 settingsMap[setting] = settingValue
             }
 
@@ -71,15 +71,15 @@ class SettingsViewModel @Inject constructor(
             val updatedSettings = _settings.value.toMutableMap()
             // handle special cases
             if (setting == AppSetting.DIAL_USSD_VIA_SIM_1 && value) {
-                prefsRepository.saveSetting(AppSetting.DIAL_USSD_VIA_SIM_2, false.toString())
+                settingsRepository.saveSetting(AppSetting.DIAL_USSD_VIA_SIM_2, false.toString())
                 updatedSettings[AppSetting.DIAL_USSD_VIA_SIM_2] = false
             } else if (setting == AppSetting.DIAL_USSD_VIA_SIM_2 && value) {
-                prefsRepository.saveSetting(AppSetting.DIAL_USSD_VIA_SIM_1, false.toString())
+                settingsRepository.saveSetting(AppSetting.DIAL_USSD_VIA_SIM_1, false.toString())
                 updatedSettings[AppSetting.DIAL_USSD_VIA_SIM_1] = false
             }
 
             updatedSettings[setting] = value
-            prefsRepository.saveSetting(setting, value.toString())
+            settingsRepository.saveSetting(setting, value.toString())
             _settings.value = updatedSettings
         }
     }
@@ -100,8 +100,8 @@ class SettingsViewModel @Inject constructor(
 
     fun getInitialDestination() {
         viewModelScope.launch(Dispatchers.IO) {
-            val isOnBoarded = prefsRepository.isOnBoardingCompleted()
-            val isLoggedIn = prefsRepository.getSetting(AppSetting.AGENT_ID).isNotEmpty()
+            val isOnBoarded = settingsRepository.isOnBoardingCompleted()
+            val isLoggedIn = settingsRepository.getSetting(AppSetting.AGENT_ID).isNotEmpty()
 
             if (isOnBoarded && isLoggedIn) {
                 _initialRoute.value = Route.Home
@@ -119,14 +119,14 @@ class SettingsViewModel @Inject constructor(
 
     fun setOnboardingCompleted() {
         viewModelScope.launch(Dispatchers.IO) {
-            prefsRepository.setOnBoardingCompleted()
+            settingsRepository.setOnBoardingCompleted()
         }
     }
 
     fun updateSimSettings() {
         viewModelScope.launch(Dispatchers.IO) {
-            prefsRepository.setUssdSimCard(_ussdSimCard.value)
-            prefsRepository.setPaymentSimCards(_paymentSimCards.value)
+            settingsRepository.setUssdSimCard(_ussdSimCard.value)
+            settingsRepository.setPaymentSimCards(_paymentSimCards.value)
             _snackbarMessage.value = "Sim settings updated"
         }
     }

@@ -7,14 +7,14 @@ import android.content.Intent
 import android.os.Bundle
 import android.telephony.SmsMessage
 import android.telephony.SubscriptionManager
-import com.example.hybridconnect.domain.repository.PrefsRepository
+import com.example.hybridconnect.domain.repository.SettingsRepository
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 @AndroidEntryPoint
 class SmsReceiver : BroadcastReceiver() {
     @Inject
-    lateinit var prefsRepository: PrefsRepository
+    lateinit var settingsRepository: SettingsRepository
 
     private val messageParts = mutableMapOf<String, StringBuilder>()
 
@@ -57,7 +57,7 @@ class SmsReceiver : BroadcastReceiver() {
 
                 // Clean up the message parts map for this messageId
                 messageParts.remove(messageId)
-                if (prefsRepository.isAppActive()) {
+                if (settingsRepository.isAppActive()) {
                     // start foreground service with SMS data
                     val serviceIntent = Intent(context, SmsProcessingService::class.java).apply {
                         putExtra("message", fullMessage)

@@ -2,7 +2,7 @@ package com.example.hybridconnect.domain.di
 
 import android.content.Context
 import com.example.hybridconnect.domain.repository.AuthRepository
-import com.example.hybridconnect.domain.repository.PrefsRepository
+import com.example.hybridconnect.domain.repository.SettingsRepository
 import com.example.hybridconnect.domain.repository.TransactionRepository
 import com.example.hybridconnect.domain.services.DefaultMessageExtractor
 import com.example.hybridconnect.domain.services.SiteLinkMessageExtractor
@@ -16,6 +16,7 @@ import com.example.hybridconnect.domain.usecase.GetOfferByPriceUseCase
 import com.example.hybridconnect.domain.usecase.LoginUserUseCase
 import com.example.hybridconnect.domain.usecase.LogoutUserUseCase
 import com.example.hybridconnect.domain.usecase.PermissionHandlerUseCase
+import com.example.hybridconnect.domain.usecase.ReadMpesaMessagesUseCase
 import com.example.hybridconnect.domain.usecase.ResendEmailVerificationOtpUseCase
 import com.example.hybridconnect.domain.usecase.SubscriptionIdFetcherUseCase
 import com.example.hybridconnect.domain.usecase.UpdateAgentUseCase
@@ -37,15 +38,15 @@ object DomainModule {
     @Singleton
     fun provideSubscriptionIdFetcherUseCase(
         @ApplicationContext context: Context,
-        prefsRepository: PrefsRepository,
+        settingsRepository: SettingsRepository,
     ): SubscriptionIdFetcherUseCase {
-        return SubscriptionIdFetcherUseCase(context, prefsRepository)
+        return SubscriptionIdFetcherUseCase(context, settingsRepository)
     }
 
     @Provides
     @Singleton
-    fun provideGetAppStatusUseCase(prefsRepository: PrefsRepository): GetAppStatusUseCase {
-        return GetAppStatusUseCase(prefsRepository)
+    fun provideGetAppStatusUseCase(settingsRepository: SettingsRepository): GetAppStatusUseCase {
+        return GetAppStatusUseCase(settingsRepository)
     }
 
     @Provides
@@ -97,18 +98,18 @@ object DomainModule {
     @Singleton
     fun provideLoginUserUseCase(
         authRepository: AuthRepository,
-        prefsRepository: PrefsRepository,
+        settingsRepository: SettingsRepository,
     ): LoginUserUseCase {
-        return LoginUserUseCase(authRepository, prefsRepository)
+        return LoginUserUseCase(authRepository, settingsRepository)
     }
 
     @Provides
     @Singleton
     fun provideVerifyOtpUseCase(
-        prefsRepository: PrefsRepository,
+        settingsRepository: SettingsRepository,
         authRepository: AuthRepository,
     ): VerifyOtpUseCase {
-        return VerifyOtpUseCase(prefsRepository, authRepository)
+        return VerifyOtpUseCase(settingsRepository, authRepository)
     }
 
     @Provides
@@ -120,16 +121,16 @@ object DomainModule {
     @Provides
     @Singleton
     fun provideLogoutUserUseCase(
-        prefsRepository: PrefsRepository,
+        settingsRepository: SettingsRepository,
         authRepository: AuthRepository,
     ): LogoutUserUseCase {
-        return LogoutUserUseCase(prefsRepository, authRepository)
+        return LogoutUserUseCase(settingsRepository, authRepository)
     }
 
     @Provides
     @Singleton
-    fun provideValidateMessageUseCase(prefsRepository: PrefsRepository): ValidateMessageUseCase {
-        return ValidateMessageUseCase(prefsRepository)
+    fun provideValidateMessageUseCase(settingsRepository: SettingsRepository): ValidateMessageUseCase {
+        return ValidateMessageUseCase(settingsRepository)
     }
 
     @Provides
@@ -159,5 +160,10 @@ object DomainModule {
         transactionRepository: TransactionRepository
     ): ForwardMessagesUseCase {
         return ForwardMessagesUseCase(context, transactionRepository)
+    }
+
+    @Provides
+    fun provideReadMpesaMessagesUseCase(@ApplicationContext context: Context): ReadMpesaMessagesUseCase {
+        return ReadMpesaMessagesUseCase(context)
     }
 }

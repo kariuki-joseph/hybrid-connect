@@ -11,7 +11,7 @@ import com.example.hybridconnect.domain.model.Agent
 import com.example.hybridconnect.domain.model.ConnectedApp
 import com.example.hybridconnect.domain.repository.AuthRepository
 import com.example.hybridconnect.domain.repository.ConnectedAppRepository
-import com.example.hybridconnect.domain.repository.PrefsRepository
+import com.example.hybridconnect.domain.repository.SettingsRepository
 import com.example.hybridconnect.domain.repository.TransactionRepository
 import com.example.hybridconnect.domain.services.SmsProcessingService
 import com.example.hybridconnect.domain.services.SmsProcessor
@@ -37,7 +37,7 @@ private const val TAG = "HomeViewModel"
 class HomeViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val authRepository: AuthRepository,
-    private val prefsRepository: PrefsRepository,
+    private val settingsRepository: SettingsRepository,
     private val logoutUserUseCase: LogoutUserUseCase,
     private val connectedAppRepository: ConnectedAppRepository,
     private val socketService: SocketService,
@@ -47,7 +47,7 @@ class HomeViewModel @Inject constructor(
     private val _connectedApps = MutableStateFlow<List<ConnectedApp>>(emptyList())
     val connectedApps: StateFlow<List<ConnectedApp>> = _connectedApps.asStateFlow()
 
-    val isAppActive: StateFlow<Boolean> = prefsRepository.isAppActive
+    val isAppActive: StateFlow<Boolean> = settingsRepository.isAppActive
 
     private val agent: StateFlow<Agent?> = authRepository.agent
 
@@ -117,14 +117,14 @@ class HomeViewModel @Inject constructor(
 
     fun toggleAppState() {
         viewModelScope.launch {
-            val newState = !prefsRepository.isAppActive.value
-            prefsRepository.saveSetting(AppSetting.IS_USSD_PROCESSING, false.toString())
+            val newState = !settingsRepository.isAppActive.value
+            settingsRepository.saveSetting(AppSetting.IS_USSD_PROCESSING, false.toString())
             if (newState) {
-                prefsRepository.setAppActive(true)
+                settingsRepository.setAppActive(true)
                 startService()
                 _snackbarMessage.value = "Requests processing started successfully"
             } else {
-                prefsRepository.setAppActive(false)
+                settingsRepository.setAppActive(false)
                 stopService()
                 _snackbarMessage.value = "Requests processing has been paused"
             }

@@ -18,13 +18,13 @@ import com.example.hybridconnect.data.remote.api.ApiService
 import com.example.hybridconnect.data.repository.AuthRepositoryImpl
 import com.example.hybridconnect.data.repository.ConnectedAppRepositoryImpl
 import com.example.hybridconnect.data.repository.OfferRepositoryImpl
-import com.example.hybridconnect.data.repository.PrefsRepositoryImpl
+import com.example.hybridconnect.data.repository.SettingsRepositoryImpl
 import com.example.hybridconnect.data.repository.TransactionRepositoryImpl
 import com.example.hybridconnect.domain.enums.AppSetting
 import com.example.hybridconnect.domain.repository.AuthRepository
 import com.example.hybridconnect.domain.repository.ConnectedAppRepository
 import com.example.hybridconnect.domain.repository.OfferRepository
-import com.example.hybridconnect.domain.repository.PrefsRepository
+import com.example.hybridconnect.domain.repository.SettingsRepository
 import com.example.hybridconnect.domain.repository.TransactionRepository
 import com.example.hybridconnect.domain.utils.Constants
 import dagger.Module
@@ -108,8 +108,8 @@ object AppModule {
     fun providePrefsRepository(
         sharedPrefsManager: SharedPrefsManager,
         prefsDao: PrefsDao,
-    ): PrefsRepository {
-        return PrefsRepositoryImpl(sharedPrefsManager, prefsDao)
+    ): SettingsRepository {
+        return SettingsRepositoryImpl(sharedPrefsManager, prefsDao)
     }
 
 
@@ -117,10 +117,10 @@ object AppModule {
     @Singleton
     fun provideAuthRepository(
         agentDao: AgentDao,
-        prefsRepository: PrefsRepository,
+        settingsRepository: SettingsRepository,
         apiService: ApiService,
     ): AuthRepository {
-        return AuthRepositoryImpl(agentDao, prefsRepository, apiService)
+        return AuthRepositoryImpl(agentDao, settingsRepository, apiService)
     }
 
 
@@ -129,13 +129,13 @@ object AppModule {
     fun provideConnectedAppRepository(
         connectedAppDao: ConnectedAppDao,
         appOfferDao: AppOfferDao,
-        prefsRepository: PrefsRepository,
+        settingsRepository: SettingsRepository,
         apiService: ApiService,
     ): ConnectedAppRepository {
         return ConnectedAppRepositoryImpl(
             connectedAppDao = connectedAppDao,
             appOfferDao = appOfferDao,
-            prefsRepository = prefsRepository,
+            settingsRepository = settingsRepository,
             apiService = apiService,
         )
     }

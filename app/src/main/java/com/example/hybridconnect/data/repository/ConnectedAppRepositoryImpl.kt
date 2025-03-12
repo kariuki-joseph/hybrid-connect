@@ -13,7 +13,7 @@ import com.example.hybridconnect.domain.enums.AppSetting
 import com.example.hybridconnect.domain.model.ConnectedApp
 import com.example.hybridconnect.domain.model.Offer
 import com.example.hybridconnect.domain.repository.ConnectedAppRepository
-import com.example.hybridconnect.domain.repository.PrefsRepository
+import com.example.hybridconnect.domain.repository.SettingsRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -30,7 +30,7 @@ private const val TAG = "ConnectedAppRepository"
 class ConnectedAppRepositoryImpl @Inject constructor(
     private val connectedAppDao: ConnectedAppDao,
     private val appOfferDao: AppOfferDao,
-    private val prefsRepository: PrefsRepository,
+    private val settingsRepository: SettingsRepository,
     private val apiService: ApiService,
 ) : ConnectedAppRepository {
     private val _connectedAppsFlow = MutableStateFlow<List<ConnectedApp>>(emptyList())
@@ -104,7 +104,7 @@ class ConnectedAppRepositoryImpl @Inject constructor(
 
     override suspend fun checkCanConnectToApp(connectId: String): Boolean {
         try {
-            val agentId = prefsRepository.getSetting(AppSetting.AGENT_ID)
+            val agentId = settingsRepository.getSetting(AppSetting.AGENT_ID)
             val request = CheckCanConnectToAppRequest(
                 agentId = agentId,
                 connectId = connectId

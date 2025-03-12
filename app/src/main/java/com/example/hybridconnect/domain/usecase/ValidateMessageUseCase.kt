@@ -7,7 +7,7 @@ import com.example.hybridconnect.domain.exception.InvalidMessageFormatException
 import com.example.hybridconnect.domain.exception.InvalidSenderException
 import com.example.hybridconnect.domain.exception.InvalidSubscriptionId
 import com.example.hybridconnect.domain.exception.RecommendationTimedOutException
-import com.example.hybridconnect.domain.repository.PrefsRepository
+import com.example.hybridconnect.domain.repository.SettingsRepository
 import com.example.hybridconnect.domain.utils.formatPhoneToTenDigits
 import com.example.hybridconnect.domain.utils.getSmsType
 import javax.inject.Inject
@@ -15,7 +15,7 @@ import javax.inject.Inject
 private const val TAG = "ValidateMessageUseCase"
 
 class ValidateMessageUseCase @Inject constructor(
-    private val prefsRepository: PrefsRepository,
+    private val settingsRepository: SettingsRepository,
 ) {
     suspend operator fun invoke(message: String, sender: String, simSlot: Int) {
         Log.d(TAG, "Params to validate: Sender: $sender, Message: $message, SimSlot: $simSlot")
@@ -60,7 +60,7 @@ class ValidateMessageUseCase @Inject constructor(
         }
 
         if (smsType == SmsType.SITE_LINK) {
-            val siteLinkNumber = prefsRepository.getSetting(AppSetting.ADMIN_SITE_LINK_NUMBER)
+            val siteLinkNumber = settingsRepository.getSetting(AppSetting.ADMIN_SITE_LINK_NUMBER)
             val formattedSender = formatPhoneToTenDigits(sender)
             if (formattedSender != siteLinkNumber) {
                 throw Exception("App is only allowed to process SiteLink messages from $siteLinkNumber")
@@ -77,11 +77,11 @@ class ValidateMessageUseCase @Inject constructor(
             throw InvalidSubscriptionId("Invalid SIM Slot : $slot")
         }
         val allowedSimSlots = mutableSetOf<Int>()
-        if (prefsRepository.getSetting(AppSetting.RECEIVE_PAYMENTS_VIA_SIM_1).toBoolean()) {
+        if (settingsRepository.getSetting(AppSetting.RECEIVE_PAYMENTS_VIA_SIM_1).toBoolean()) {
             allowedSimSlots.add(0)
         }
 
-        if (prefsRepository.getSetting(AppSetting.RECEIVE_PAYMENTS_VIA_SIM_2).toBoolean()) {
+        if (settingsRepository.getSetting(AppSetting.RECEIVE_PAYMENTS_VIA_SIM_2).toBoolean()) {
             allowedSimSlots.add(1)
         }
 

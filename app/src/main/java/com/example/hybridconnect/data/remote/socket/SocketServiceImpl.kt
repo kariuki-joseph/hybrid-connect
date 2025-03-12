@@ -5,7 +5,7 @@ import com.example.hybridconnect.domain.enums.AppSetting
 import com.example.hybridconnect.domain.enums.SocketEvent
 import com.example.hybridconnect.domain.model.ConnectedApp
 import com.example.hybridconnect.domain.repository.ConnectedAppRepository
-import com.example.hybridconnect.domain.repository.PrefsRepository
+import com.example.hybridconnect.domain.repository.SettingsRepository
 import com.example.hybridconnect.domain.services.SocketService
 import io.socket.client.IO
 import io.socket.client.Socket
@@ -21,7 +21,7 @@ private const val TAG = "SocketServiceImpl"
 
 class SocketServiceImpl(
     private val serverUrl: String,
-    private val prefsRepository: PrefsRepository,
+    private val settingsRepository: SettingsRepository,
     private val connectedAppRepository: ConnectedAppRepository
 ) : SocketService {
     private lateinit var socket: Socket
@@ -34,7 +34,7 @@ class SocketServiceImpl(
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 Log.d(TAG, "Trying to connect to socket...")
-                val agentId = prefsRepository.getSetting(AppSetting.AGENT_ID)
+                val agentId = settingsRepository.getSetting(AppSetting.AGENT_ID)
                 if (agentId.isEmpty()) {
                     invokeListener(
                         SocketEvent.EVENT_CONNECT_ERROR.name,

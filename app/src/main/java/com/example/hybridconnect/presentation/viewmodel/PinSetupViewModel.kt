@@ -3,7 +3,7 @@ package com.example.hybridconnect.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.hybridconnect.domain.repository.AuthRepository
-import com.example.hybridconnect.domain.repository.PrefsRepository
+import com.example.hybridconnect.domain.repository.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -15,7 +15,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class PinSetupViewModel @Inject constructor(
-    private val prefsRepository: PrefsRepository,
+    private val settingsRepository: SettingsRepository,
     private val authRepository: AuthRepository
 ) : ViewModel() {
 

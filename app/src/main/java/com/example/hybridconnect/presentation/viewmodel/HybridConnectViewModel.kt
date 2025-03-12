@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.hybridconnect.domain.enums.AppSetting
 import com.example.hybridconnect.domain.enums.SocketEvent
-import com.example.hybridconnect.domain.repository.PrefsRepository
+import com.example.hybridconnect.domain.repository.SettingsRepository
 import com.example.hybridconnect.domain.services.SocketService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,7 +19,7 @@ private const val TAG = "HybridConnectViewModel"
 @HiltViewModel
 class HybridConnectViewModel @Inject constructor(
     private val socketService: SocketService,
-    private val prefsRepository: PrefsRepository,
+    private val settingsRepository: SettingsRepository,
 ) : ViewModel() {
     private val _isGenerating = MutableStateFlow(false)
     val isGenerating: StateFlow<Boolean> = _isGenerating.asStateFlow()
@@ -67,7 +67,7 @@ class HybridConnectViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 _isLoading.value = true
-                val connectId = prefsRepository.getSetting(AppSetting.APP_CONNECT_ID)
+                val connectId = settingsRepository.getSetting(AppSetting.APP_CONNECT_ID)
                 if (connectId.isNotEmpty()) {
                     _connectId.value = connectId
                 }

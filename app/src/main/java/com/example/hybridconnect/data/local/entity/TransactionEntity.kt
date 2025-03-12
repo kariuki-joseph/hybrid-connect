@@ -26,4 +26,5 @@ data class TransactionEntity(
     val offerId: UUID?,
     val message: String = "",
     val createdAt: Long = System.currentTimeMillis(),
+    val forwarded: Boolean = false
 )

@@ -97,29 +97,37 @@ class MessageForwardingService : Service() {
 
 
     private suspend fun sendWebsocketMessage(transaction: Transaction) {
-        val offer = transaction.offer
-            ?: throw UnavailableOfferException(
-                transaction,
-                "Currently unable to forward transactions with null offers"
-            )
-        val apps = connectedAppRepository.getAppsByOffer(offer)
+        val apps = connectedAppRepository.getConnectedApps().first()
         val activeApps = apps.filter { it.isOnline }
 
         if (activeApps.isEmpty()) {
             throw Exception("No connected apps available to process the message")
         }
 
-        // Fetch the last used index per offer and cycle to the next app
-        val lastUsedIndex = connectedAppRepository.getLastUsedIndexForOffer(offer.id)
-        val nextIndex = (lastUsedIndex + 1) % activeApps.size
-        val selectedApp = activeApps[nextIndex]
+        var nextIndex = 0
+        val selectedApp = if (transaction.offer == null) {
+            activeApps.first()
+        } else {
+            val offer = transaction.offer
+            val appsByOffer = connectedAppRepository.getAppsByOffer(offer)
+            val activeAppsByOffer = appsByOffer.filter { it.isOnline }
 
-        Log.d(TAG, "Sending message to ${selectedApp.connectId}")
+            if (activeAppsByOffer.isEmpty()) {
+                throw Exception("App for the offer exists but is offline")
+            } else {
+                val lastUsedIndex = connectedAppRepository.getLastUsedIndexForOffer(offer.id)
+                nextIndex = (lastUsedIndex + 1) % activeAppsByOffer.size
+                activeAppsByOffer[nextIndex]
+            }
+        }
+
         socketService.sendMessageToApp(selectedApp, transaction.mpesaMessage)
+        connectedAppRepository.incrementMessagesSent(selectedApp)
 
         // Update round-robin index per offer
-        connectedAppRepository.incrementMessagesSent(selectedApp)
-        connectedAppRepository.setLastUsedIndexForOffer(offer.id, nextIndex)
+        transaction.offer?.let { offer ->
+            connectedAppRepository.setLastUsedIndexForOffer(offer.id, nextIndex)
+        }
     }
 
     private fun createNotification(title: String, content: String): Notification {

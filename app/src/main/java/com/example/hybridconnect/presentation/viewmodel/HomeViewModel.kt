@@ -45,8 +45,8 @@ class HomeViewModel @Inject constructor(
 ) : ViewModel() {
     val appState: StateFlow<AppState> = appControl.appState
 
-    private val _connectedApps = MutableStateFlow<List<ConnectedApp>>(emptyList())
-    val connectedApps: StateFlow<List<ConnectedApp>> = _connectedApps.asStateFlow()
+    val connectedApps: StateFlow<List<ConnectedApp>> = connectedAppRepository.getConnectedApps()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), emptyList())
 
     val isAppActive: StateFlow<Boolean> = settingsRepository.isAppActive
 
@@ -74,42 +74,19 @@ class HomeViewModel @Inject constructor(
     private val _connectedOffersCount = MutableStateFlow<Map<String, Int>>(emptyMap())
     val connectedOffersCount: StateFlow<Map<String, Int>> = _connectedOffersCount.asStateFlow()
 
-    private var count = 0;
-
     init {
         loadAgent()
-        loadConnectedApps()
         createGreetings()
         startGreetingTimer()
         loadConnectedOffersCount()
+        observeConnectedApps()
     }
+
 
     private fun loadAgent() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 authRepository.fetchAgent()
-            } catch (e: Exception) {
-                _snackbarMessage.value = e.message.toString()
-            }
-        }
-    }
-
-    private fun loadConnectedApps() {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                connectedAppRepository.getConnectedApps().collect { apps ->
-                    _connectedApps.value = apps
-
-                    apps.any { app ->
-                        if (app.isOnline) {
-                            retryUnforwardedTransactionsUseCase()
-                            true
-                        } else {
-                            transactionRepository.transactionQueue.clear()
-                            false
-                        }
-                    }
-                }
             } catch (e: Exception) {
                 _snackbarMessage.value = e.message.toString()
             }
@@ -124,6 +101,18 @@ class HomeViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 _snackbarMessage.value = e.message
+            }
+        }
+    }
+
+    private fun observeConnectedApps() {
+        viewModelScope.launch {
+            connectedAppRepository.getConnectedApps().collect { apps ->
+                if (apps.any { it.isOnline }) {
+                    retryUnforwardedTransactionsUseCase()
+                } else {
+                    transactionRepository.transactionQueue.clear()
+                }
             }
         }
     }

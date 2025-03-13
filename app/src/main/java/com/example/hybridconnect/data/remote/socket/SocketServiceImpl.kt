@@ -22,7 +22,7 @@ private const val TAG = "SocketServiceImpl"
 class SocketServiceImpl(
     private val serverUrl: String,
     private val settingsRepository: SettingsRepository,
-    private val connectedAppRepository: ConnectedAppRepository
+    private val connectedAppRepository: ConnectedAppRepository,
 ) : SocketService {
     private lateinit var socket: Socket
     private val eventListeners = mutableMapOf<String, (List<Any>) -> Unit>()
@@ -125,8 +125,8 @@ class SocketServiceImpl(
             }
         }
 
-            socket.on(SocketEvent.EVENT_APP_DISCONNECTED.name) { args ->
-                val connectId = args.getOrNull(0) as? String ?: return@on
+        socket.on(SocketEvent.EVENT_APP_DISCONNECTED.name) { args ->
+            val connectId = args.getOrNull(0) as? String ?: return@on
             CoroutineScope(Dispatchers.IO).launch {
                 connectedAppRepository.updateOnlineStatus(connectId, false)
             }
@@ -135,10 +135,7 @@ class SocketServiceImpl(
 
     private fun markAllAppsOffline() {
         CoroutineScope(Dispatchers.IO).launch {
-            val connectedApps = connectedAppRepository.getConnectedApps().value
-            connectedApps.forEach { app ->
-                connectedAppRepository.updateOnlineStatus(app.connectId, false)
-            }
+            connectedAppRepository.markAllAppsOffline()
             Log.d(TAG, "All connected apps marked as offline")
         }
     }

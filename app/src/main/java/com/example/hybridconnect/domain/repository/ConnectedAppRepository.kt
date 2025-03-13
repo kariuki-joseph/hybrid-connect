@@ -7,10 +7,11 @@ import kotlinx.coroutines.flow.StateFlow
 import java.util.UUID
 
 interface ConnectedAppRepository {
-    suspend fun getConnectedApps(): StateFlow<List<ConnectedApp>>
+    fun getConnectedApps(): Flow<List<ConnectedApp>>
     suspend fun getConnectedApp(connectId: String): ConnectedApp?
     suspend fun addConnectedApp(connectedApp: ConnectedApp)
     suspend fun updateOnlineStatus(connectId: String, isOnline: Boolean)
+    suspend fun markAllAppsOffline()
     suspend fun incrementMessagesSent(connectedApp: ConnectedApp)
     suspend fun deleteConnectedApp(connectedApp: ConnectedApp)
     suspend fun checkCanConnectToApp(connectId: String): Boolean

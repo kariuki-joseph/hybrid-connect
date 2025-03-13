@@ -14,13 +14,8 @@ import com.example.hybridconnect.domain.model.ConnectedApp
 import com.example.hybridconnect.domain.model.Offer
 import com.example.hybridconnect.domain.repository.ConnectedAppRepository
 import com.example.hybridconnect.domain.repository.SettingsRepository
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
@@ -33,7 +28,6 @@ class ConnectedAppRepositoryImpl @Inject constructor(
     private val settingsRepository: SettingsRepository,
     private val apiService: ApiService,
 ) : ConnectedAppRepository {
-    private val _connectedAppsFlow = MutableStateFlow<List<ConnectedApp>>(emptyList())
 
     private val lastUsedIndexMap = ConcurrentHashMap<UUID, Int>()
     override fun getLastUsedIndexForOffer(offerId: UUID): Int {
@@ -44,7 +38,11 @@ class ConnectedAppRepositoryImpl @Inject constructor(
         lastUsedIndexMap[offerId] = index
     }
 
-    override suspend fun getConnectedApps(): StateFlow<List<ConnectedApp>> = _connectedAppsFlow
+    override fun getConnectedApps(): Flow<List<ConnectedApp>> =
+        connectedAppDao.getAllConnectedApps().map { entities ->
+            entities.map { it.toDomain() }
+        }
+
     override suspend fun getConnectedApp(connectId: String): ConnectedApp? {
         try {
             return connectedAppDao.getConnectedAppById(connectId)?.toDomain()
@@ -54,16 +52,9 @@ class ConnectedAppRepositoryImpl @Inject constructor(
         }
     }
 
-    init {
-        CoroutineScope(Dispatchers.IO).launch {
-            _connectedAppsFlow.value = connectedAppDao.getAllConnectedApps().map { it.toDomain() }
-        }
-    }
-
     override suspend fun addConnectedApp(connectedApp: ConnectedApp) {
         try {
             connectedAppDao.addConnectedApp(connectedApp.toEntity())
-            _connectedAppsFlow.value = connectedAppDao.getAllConnectedApps().map { it.toDomain() }
         } catch (e: Exception) {
             Log.e(TAG, "Error adding connected app", e)
             throw e
@@ -73,19 +64,23 @@ class ConnectedAppRepositoryImpl @Inject constructor(
     override suspend fun updateOnlineStatus(connectId: String, isOnline: Boolean) {
         try {
             connectedAppDao.updateOnlineStatus(connectId, isOnline)
-            _connectedAppsFlow.value = _connectedAppsFlow.value.map {
-                if (it.connectId == connectId) it.copy(isOnline = isOnline) else it
-            }
         } catch (e: Exception) {
             Log.e(TAG, "Error updating online status", e)
             throw e
         }
     }
 
+    override suspend fun markAllAppsOffline() {
+        try {
+            connectedAppDao.markAllAppsOffline()
+        } catch (e: Exception){
+            Log.e(TAG, e.message, e)
+        }
+    }
+
     override suspend fun incrementMessagesSent(connectedApp: ConnectedApp) {
         try {
             connectedAppDao.incrementMessagesSent(connectedApp.connectId)
-            _connectedAppsFlow.value = connectedAppDao.getAllConnectedApps().map { it.toDomain() }
         } catch (e: Exception) {
             Log.e(TAG, "Error incrementing messages sent", e)
             throw e
@@ -95,7 +90,6 @@ class ConnectedAppRepositoryImpl @Inject constructor(
     override suspend fun deleteConnectedApp(connectedApp: ConnectedApp) {
         try {
             connectedAppDao.deleteConnectedApp(connectedApp.connectId)
-            _connectedAppsFlow.value = connectedAppDao.getAllConnectedApps().map { it.toDomain() }
         } catch (e: Exception) {
             Log.e(TAG, "Error deleting connected app", e)
             throw e

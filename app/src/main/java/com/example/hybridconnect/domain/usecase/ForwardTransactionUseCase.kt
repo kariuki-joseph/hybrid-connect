@@ -21,7 +21,7 @@ class ForwardTransactionUseCase @Inject constructor(
     operator fun invoke(transaction: Transaction) {
         try {
             if(appControl.appState.value != AppState.STATE_RUNNING){
-                throw Exception("App is not running. Unable to forward transaction")
+                throw Exception("App is not running. Cannot forward transaction")
             }
 
             if (transactionRepository.transactionQueue.contains(transaction)) {
@@ -37,7 +37,7 @@ class ForwardTransactionUseCase @Inject constructor(
             val forwardingIntent = Intent(context, MessageForwardingService::class.java)
             context.startForegroundService(forwardingIntent)
         } catch (e: Exception) {
-            Log.d(TAG, e.message, e)
+            Log.e(TAG, e.message.toString())
         }
     }
 }

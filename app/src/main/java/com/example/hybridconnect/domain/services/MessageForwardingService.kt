@@ -9,6 +9,7 @@ import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.hybridconnect.R
+import com.example.hybridconnect.domain.exception.UnavailableOfferException
 import com.example.hybridconnect.domain.model.Transaction
 import com.example.hybridconnect.domain.repository.ConnectedAppRepository
 import com.example.hybridconnect.domain.repository.TransactionRepository
@@ -77,8 +78,11 @@ class MessageForwardingService : Service() {
             try {
                 sendWebsocketMessage(transaction)
                 updateTransactionUseCase(transaction.copy(isForwarded = true))
+            } catch (e: UnavailableOfferException) {
+                Log.e(TAG, e.message.toString())
             } catch (e: Exception) {
                 Log.e(TAG, "Transaction ${transaction.id} failed, retrying later.", e)
+                transactionRepository.transactionQueue.add(transaction)
                 delay(2000)
             }
         }
@@ -89,13 +93,16 @@ class MessageForwardingService : Service() {
 
 
     private suspend fun sendWebsocketMessage(transaction: Transaction) {
-        val offer = transaction.offer ?: return
+        val offer = transaction.offer
+            ?: throw UnavailableOfferException(
+                transaction,
+                "Currently unable to forward transactions with null offers"
+            )
         val apps = connectedAppRepository.getAppsByOffer(offer)
         val activeApps = apps.filter { it.isOnline }
 
         if (activeApps.isEmpty()) {
-            Log.e(TAG, "No connected apps available to process the message")
-            return
+            throw Exception("No connected apps available to process the message")
         }
 
         // Fetch the last used index per offer and cycle to the next app

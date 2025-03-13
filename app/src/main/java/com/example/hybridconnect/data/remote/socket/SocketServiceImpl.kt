@@ -24,11 +24,9 @@ class SocketServiceImpl(
     private val serverUrl: String,
     private val settingsRepository: SettingsRepository,
     private val connectedAppRepository: ConnectedAppRepository,
-    private val retryUnforwardedTransactionsUseCase: RetryUnforwardedTransactionsUseCase,
+    private val retryUnforwardedTransactionsUseCase: RetryUnforwardedTransactionsUseCase
 ) : SocketService {
     private lateinit var socket: Socket
-    private var listenersRegistered = false
-    private var dynamicEventListenersRegistered = false
     private val eventListeners = mutableMapOf<String, (List<Any>) -> Unit>()
     private val _isConnected = MutableStateFlow(false)
     override val isConnected: StateFlow<Boolean>
@@ -91,13 +89,10 @@ class SocketServiceImpl(
     }
 
     private fun registerDynamicEventListeners() {
-        if (!dynamicEventListenersRegistered) {
-            eventListeners.forEach { (event, listener) ->
-                socket.on(event) { args ->
-                    listener(args.toList())
-                }
+        eventListeners.forEach { (event, listener) ->
+            socket.on(event) { args ->
+                listener(args.toList())
             }
-            dynamicEventListenersRegistered = true
         }
     }
 
@@ -125,11 +120,8 @@ class SocketServiceImpl(
     }
 
     private fun registerOnlineStatusListeners() {
-        if (!listenersRegistered) {
-            socket.on(SocketEvent.EVENT_APP_CONNECTED.name, ::handleAppConnected)
-            socket.on(SocketEvent.EVENT_APP_DISCONNECTED.name, ::handleAppDisconnected)
-            listenersRegistered = true
-        }
+        socket.on(SocketEvent.EVENT_APP_CONNECTED.name, ::handleAppConnected)
+        socket.on(SocketEvent.EVENT_APP_DISCONNECTED.name, ::handleAppDisconnected)
     }
 
     private fun handleAppConnected(args: Array<Any>) {

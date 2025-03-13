@@ -2,14 +2,12 @@ package com.example.hybridconnect.domain.usecase
 
 import android.content.Context
 import android.net.Uri
-import com.example.hybridconnect.domain.repository.SettingsRepository
 
 class ReadMpesaMessagesUseCase(
-    private val context: Context,
-    private val settingsRepository: SettingsRepository
+    private val context: Context
 ) {
 
-    suspend operator fun invoke(bufferSize: Int = 50): List<String> {
+    operator fun invoke(bufferSize: Int = 10): List<String> {
         val uri = Uri.parse("content://sms/inbox")
         val projection = arrayOf("body", "date")
         val selection = "address = ?" // Exact match for MPESA

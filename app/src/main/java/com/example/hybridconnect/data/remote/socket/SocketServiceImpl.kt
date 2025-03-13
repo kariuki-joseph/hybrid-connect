@@ -120,16 +120,20 @@ class SocketServiceImpl(
     }
 
     private fun registerOnlineStatusListeners() {
-        socket.on(SocketEvent.EVENT_APP_CONNECTED.name) { args ->
-            val connectId = args.getOrNull(0) as? String ?: return@on
-            onAppConnectedCallBack(connectId)
-        }
+        socket.on(SocketEvent.EVENT_APP_CONNECTED.name, ::handleAppConnected)
+        socket.on(SocketEvent.EVENT_APP_DISCONNECTED.name, ::handleAppDisconnected)
+    }
 
-        socket.on(SocketEvent.EVENT_APP_DISCONNECTED.name) { args ->
-            val connectId = args.getOrNull(0) as? String ?: return@on
-            CoroutineScope(Dispatchers.IO).launch {
-                connectedAppRepository.updateOnlineStatus(connectId, false)
-            }
+    private fun handleAppConnected(args: Array<Any>) {
+        val connectId = args.getOrNull(0) as? String ?: return
+        onAppConnectedCallBack(connectId)
+    }
+
+
+    private fun handleAppDisconnected(args: Array<Any>) {
+        val connectId = args.getOrNull(0) as? String ?: return
+        CoroutineScope(Dispatchers.IO).launch {
+            connectedAppRepository.updateOnlineStatus(connectId, false)
         }
     }
 

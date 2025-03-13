@@ -89,7 +89,7 @@ class MessageForwardingService : Service() {
             } catch (e: UnavailableOfferException) {
                 Log.e(TAG, e.message.toString())
             } catch (e: Exception) {
-                Log.e(TAG, "Transaction ${transaction.id} failed, retrying later.", e)
+                Log.e(TAG, "Transaction ${transaction.id} failed, retrying later.")
                 transactionRepository.transactionQueue.add(transaction)
                 delay(2000)
             }

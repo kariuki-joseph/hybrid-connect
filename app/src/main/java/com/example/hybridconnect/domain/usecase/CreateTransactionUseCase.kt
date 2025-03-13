@@ -42,7 +42,7 @@ class CreateTransactionUseCase @Inject constructor(
             val transactionId = transactionRepository.createTransaction(transaction)
             return transaction.copy(id = transactionId)
         } catch (e: Exception) {
-            Log.e(TAG, e.message, e)
+            Log.e(TAG, e.message.toString())
             throw e
         }
     }

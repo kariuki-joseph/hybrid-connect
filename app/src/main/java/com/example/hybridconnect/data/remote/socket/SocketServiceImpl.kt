@@ -147,7 +147,7 @@ class SocketServiceImpl(
     private fun onAppConnectedCallBack(connectId: String) {
         CoroutineScope(Dispatchers.IO).launch {
             connectedAppRepository.updateOnlineStatus(connectId, true)
-            retryUnforwardedTransactionsUseCase()
+//            retryUnforwardedTransactionsUseCase()
         }
     }
 }

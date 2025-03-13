@@ -2,6 +2,7 @@ package com.example.hybridconnect.domain.usecase
 
 import android.util.Log
 import com.example.hybridconnect.domain.repository.TransactionRepository
+import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 
 private const val TAG = "RetryUnforwardedTransactionsUseCase"
@@ -12,10 +13,9 @@ class RetryUnforwardedTransactionsUseCase @Inject constructor(
 ) {
     suspend operator fun invoke() {
         try {
-            transactionRepository.transactionQueueFlow.collect { transactions ->
-                transactions.forEach { transaction ->
-                    forwardTransactionUseCase(transaction)
-                }
+            val transactions = transactionRepository.transactionQueueFlow.first()
+            transactions.forEach { transaction ->
+                forwardTransactionUseCase(transaction)
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error processing unforwarded transactions", e)

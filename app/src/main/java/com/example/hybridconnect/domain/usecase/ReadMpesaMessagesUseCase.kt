@@ -10,7 +10,7 @@ class ReadMpesaMessagesUseCase(
     private val subscriptionIdFetcherUseCase: SubscriptionIdFetcherUseCase,
 ) {
 
-    operator fun invoke(bufferSize: Int = 10): List<RawSmsMessage> {
+    operator fun invoke(bufferSize: Int = 15): List<RawSmsMessage> {
         val uri = Uri.parse("content://sms/inbox")
         val projection = arrayOf("body", "address", "date", "sub_id")
         val selection = "address = ?" // Exact match for MPESA

@@ -20,4 +20,6 @@ interface TransactionRepository {
     suspend fun deleteTransaction(transaction: Transaction)
 
     suspend fun getTransactionByMpesaCode(mpesaCode: String): Transaction?
+
+    suspend fun updateTransaction(updatedTransaction: Transaction)
 }

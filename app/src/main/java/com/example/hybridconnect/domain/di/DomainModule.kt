@@ -21,6 +21,7 @@ import com.example.hybridconnect.domain.usecase.ReadMpesaMessagesUseCase
 import com.example.hybridconnect.domain.usecase.ResendEmailVerificationOtpUseCase
 import com.example.hybridconnect.domain.usecase.SubscriptionIdFetcherUseCase
 import com.example.hybridconnect.domain.usecase.UpdateAgentUseCase
+import com.example.hybridconnect.domain.usecase.UpdateTransactionUseCase
 import com.example.hybridconnect.domain.usecase.ValidateMessageUseCase
 import com.example.hybridconnect.domain.usecase.VerifyOtpUseCase
 import dagger.Module
@@ -177,5 +178,13 @@ object DomainModule {
         transactionRepository: TransactionRepository,
     ): CreateTransactionUseCase {
         return CreateTransactionUseCase(transactionRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideUpdateTransactionStatusUseCase(
+        transactionRepository: TransactionRepository
+    ): UpdateTransactionUseCase {
+        return UpdateTransactionUseCase(transactionRepository)
     }
 }

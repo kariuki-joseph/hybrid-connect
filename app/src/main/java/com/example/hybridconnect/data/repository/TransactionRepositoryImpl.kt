@@ -94,5 +94,16 @@ class TransactionRepositoryImpl @Inject constructor(
         return transaction.toDomain(offer)
     }
 
+    override suspend fun updateTransaction(updatedTransaction: Transaction) {
+        try {
+            transactionDao.updateTransaction(updatedTransaction.toEntity())
+            _transactions.value = _transactions.value.map { transaction ->
+                if (transaction.id == updatedTransaction.id) updatedTransaction else transaction
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "updateTransaction", e)
+            throw e
+        }
+    }
 
 }

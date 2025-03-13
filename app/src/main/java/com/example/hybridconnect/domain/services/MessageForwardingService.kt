@@ -12,6 +12,7 @@ import com.example.hybridconnect.R
 import com.example.hybridconnect.domain.model.Transaction
 import com.example.hybridconnect.domain.repository.ConnectedAppRepository
 import com.example.hybridconnect.domain.repository.TransactionRepository
+import com.example.hybridconnect.domain.usecase.UpdateTransactionUseCase
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -36,6 +37,9 @@ class MessageForwardingService : Service() {
 
     @Inject
     lateinit var connectedAppRepository: ConnectedAppRepository
+
+    @Inject
+    lateinit var updateTransactionUseCase: UpdateTransactionUseCase
 
     private val serviceScope = CoroutineScope(Dispatchers.IO)
 
@@ -72,6 +76,7 @@ class MessageForwardingService : Service() {
             Log.d(TAG, "Processing transaction....")
             try {
                 sendWebsocketMessage(transaction)
+                updateTransactionUseCase(transaction.copy(isForwarded = true))
             } catch (e: Exception) {
                 Log.e(TAG, "Transaction ${transaction.id} failed, retrying later.", e)
                 delay(2000)

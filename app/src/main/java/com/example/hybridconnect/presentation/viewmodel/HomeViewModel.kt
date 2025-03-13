@@ -1,6 +1,7 @@
 package com.example.hybridconnect.presentation.viewmodel
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.hybridconnect.domain.enums.AppState
@@ -108,9 +109,8 @@ class HomeViewModel @Inject constructor(
     private fun observeConnectedApps() {
         viewModelScope.launch {
             connectedAppRepository.getConnectedApps().collect { apps ->
-                if (apps.any { it.isOnline }) {
-                    retryUnforwardedTransactionsUseCase()
-                } else {
+                if (apps.none { it.isOnline }) {
+                    Log.d(TAG, "No app was found online. Clearing queue")
                     transactionRepository.transactionQueue.clear()
                 }
             }

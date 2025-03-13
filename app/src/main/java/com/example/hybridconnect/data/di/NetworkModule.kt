@@ -5,6 +5,7 @@ import com.example.hybridconnect.data.remote.socket.SocketServiceImpl
 import com.example.hybridconnect.domain.repository.ConnectedAppRepository
 import com.example.hybridconnect.domain.repository.SettingsRepository
 import com.example.hybridconnect.domain.services.SocketService
+import com.example.hybridconnect.domain.usecase.RetryUnforwardedTransactionsUseCase
 import com.example.hybridconnect.domain.utils.Constants
 import dagger.Module
 import dagger.Provides
@@ -67,7 +68,13 @@ object NetworkModule {
     fun provideSocketService(
         settingsRepository: SettingsRepository,
         connectedAppRepository: ConnectedAppRepository,
+        retryUnforwardedTransactionsUseCase: RetryUnforwardedTransactionsUseCase,
     ): SocketService {
-        return SocketServiceImpl(BASE_URL, settingsRepository, connectedAppRepository)
+        return SocketServiceImpl(
+            BASE_URL,
+            settingsRepository,
+            connectedAppRepository,
+            retryUnforwardedTransactionsUseCase
+        )
     }
 }

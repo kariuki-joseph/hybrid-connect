@@ -7,6 +7,7 @@ import com.example.hybridconnect.domain.model.ConnectedApp
 import com.example.hybridconnect.domain.repository.ConnectedAppRepository
 import com.example.hybridconnect.domain.repository.SettingsRepository
 import com.example.hybridconnect.domain.services.SocketService
+import com.example.hybridconnect.domain.usecase.RetryUnforwardedTransactionsUseCase
 import io.socket.client.IO
 import io.socket.client.Socket
 import kotlinx.coroutines.CoroutineScope
@@ -23,6 +24,7 @@ class SocketServiceImpl(
     private val serverUrl: String,
     private val settingsRepository: SettingsRepository,
     private val connectedAppRepository: ConnectedAppRepository,
+    private val retryUnforwardedTransactionsUseCase: RetryUnforwardedTransactionsUseCase
 ) : SocketService {
     private lateinit var socket: Socket
     private val eventListeners = mutableMapOf<String, (List<Any>) -> Unit>()
@@ -120,9 +122,7 @@ class SocketServiceImpl(
     private fun registerOnlineStatusListeners() {
         socket.on(SocketEvent.EVENT_APP_CONNECTED.name) { args ->
             val connectId = args.getOrNull(0) as? String ?: return@on
-            CoroutineScope(Dispatchers.IO).launch {
-                connectedAppRepository.updateOnlineStatus(connectId, true)
-            }
+            onAppConnectedCallBack(connectId)
         }
 
         socket.on(SocketEvent.EVENT_APP_DISCONNECTED.name) { args ->
@@ -137,6 +137,13 @@ class SocketServiceImpl(
         CoroutineScope(Dispatchers.IO).launch {
             connectedAppRepository.markAllAppsOffline()
             Log.d(TAG, "All connected apps marked as offline")
+        }
+    }
+
+    private fun onAppConnectedCallBack(connectId: String) {
+        CoroutineScope(Dispatchers.IO).launch {
+            connectedAppRepository.updateOnlineStatus(connectId, true)
+            retryUnforwardedTransactionsUseCase()
         }
     }
 }

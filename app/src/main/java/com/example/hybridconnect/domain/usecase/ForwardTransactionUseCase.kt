@@ -11,12 +11,16 @@ import javax.inject.Inject
 
 private const val TAG = "ForwardMessagesUseCase"
 
-class ForwardMessagesUseCase @Inject constructor(
+class ForwardTransactionUseCase @Inject constructor(
     @ApplicationContext private val context: Context,
     private val transactionRepository: TransactionRepository,
 ) {
     operator fun invoke(transaction: Transaction) {
         try {
+            if (transactionRepository.transactionQueue.contains(transaction)) {
+                throw Exception("Transaction has already been queued up for forwarding. Aborting")
+            }
+
             transactionRepository.transactionQueue.add(transaction)
             Log.d(
                 TAG,

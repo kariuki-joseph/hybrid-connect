@@ -18,6 +18,7 @@ import com.example.hybridconnect.domain.services.SmsProcessingService
 import com.example.hybridconnect.domain.services.SmsProcessor
 import com.example.hybridconnect.domain.services.SocketService
 import com.example.hybridconnect.domain.services.interfaces.AppControl
+import com.example.hybridconnect.domain.usecase.ForwardMessagesUseCase
 import com.example.hybridconnect.domain.usecase.LogoutUserUseCase
 import com.example.hybridconnect.domain.usecase.RetryUnforwardedTransactionsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -46,7 +47,6 @@ class HomeViewModel @Inject constructor(
     private val connectedAppRepository: ConnectedAppRepository,
     private val socketService: SocketService,
     private val transactionRepository: TransactionRepository,
-    private val smsProcessor: SmsProcessor,
     private val retryUnforwardedTransactionsUseCase: RetryUnforwardedTransactionsUseCase,
 ) : ViewModel() {
     val appState: StateFlow<AppState> = appControl.appState
@@ -88,6 +88,7 @@ class HomeViewModel @Inject constructor(
         createGreetings()
         startGreetingTimer()
         loadConnectedOffersCount()
+        startOnlineStatusCallback()
     }
 
     private fun loadAgent() {
@@ -105,6 +106,16 @@ class HomeViewModel @Inject constructor(
             try {
                 connectedAppRepository.getConnectedApps().collect { apps ->
                     _connectedApps.value = apps
+
+                    apps.any { app ->
+                        if (app.isOnline) {
+                            forwardMessagesUseCase.startMessageForwardingWorker()
+                            true
+                        } else {
+                            forwardMessagesUseCase.cancelMessageForwardingWork()
+                            false
+                        }
+                    }
                 }
             } catch (e: Exception) {
                 _snackbarMessage.value = e.message.toString()
@@ -214,15 +225,15 @@ class HomeViewModel @Inject constructor(
         context.stopService(serviceIntent)
     }
 
-    private fun sendMessage(message: String) {
-        Log.d(TAG, "Trying to send message: $message")
-        smsProcessor.processMessage(message, "MPESA", 1)
-    }
-
-    fun testButtonClicked(amount: String = "5") {
-        val transactionCode = "TCB49LSF1K${++count}"
-        val message =
-            "$transactionCode Confirmed.You have received Ksh$amount.00 from Joseph  Kariuki 0114662464 on 11/3/25 at 1:21 PM  New M-PESA balance is Ksh9.73. Earn interest daily on Ziidi MMF,Dial *334#"
-        sendMessage(message)
+    private fun startOnlineStatusCallback() {
+        viewModelScope.launch {
+            isConnected.collect { connected ->
+                if (connected) {
+                    forwardMessagesUseCase.startMessageForwardingWorker()
+                } else {
+                    forwardMessagesUseCase.cancelMessageForwardingWork()
+                }
+            }
+        }
     }
 }

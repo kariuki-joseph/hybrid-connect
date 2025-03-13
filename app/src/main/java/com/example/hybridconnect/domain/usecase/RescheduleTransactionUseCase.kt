@@ -11,7 +11,7 @@ class RescheduleTransactionUseCase @Inject constructor(
     private val createTransactionUseCase: CreateTransactionUseCase,
     private val updateTransactionUseCase: UpdateTransactionUseCase,
     private val deleteTransactionUseCase: DeleteTransactionUseCase,
-    private val forwardMessagesUseCase: ForwardMessagesUseCase,
+    private val forwardTransactionUseCase: ForwardTransactionUseCase,
     ) {
     suspend operator fun invoke(originalTransaction: Transaction, newOffer: Offer, time: Long) {
         try {

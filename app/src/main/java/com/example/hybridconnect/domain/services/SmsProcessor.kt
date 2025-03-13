@@ -5,7 +5,7 @@ import com.example.hybridconnect.domain.exception.InvalidMessageFormatException
 import com.example.hybridconnect.domain.exception.RecommendationTimedOutException
 import com.example.hybridconnect.domain.usecase.CreateTransactionUseCase
 import com.example.hybridconnect.domain.usecase.ExtractMessageDetailsUseCase
-import com.example.hybridconnect.domain.usecase.ForwardMessagesUseCase
+import com.example.hybridconnect.domain.usecase.ForwardTransactionUseCase
 import com.example.hybridconnect.domain.usecase.GetOfferByPriceUseCase
 import com.example.hybridconnect.domain.usecase.ValidateMessageUseCase
 import kotlinx.coroutines.CoroutineScope
@@ -20,7 +20,7 @@ class SmsProcessor @Inject constructor(
     private val extractMessageDetailsUseCase: ExtractMessageDetailsUseCase,
     private val getOfferByPriceUseCase: GetOfferByPriceUseCase,
     private val createTransactionUseCase: CreateTransactionUseCase,
-    private val forwardMessagesUseCase: ForwardMessagesUseCase,
+    private val forwardTransactionUseCase: ForwardTransactionUseCase,
 ) {
     fun processMessage(message: String, sender: String, simSlot: Int) {
         CoroutineScope(Dispatchers.IO).launch {
@@ -30,7 +30,7 @@ class SmsProcessor @Inject constructor(
                 val sms = extractMessageDetailsUseCase(message)
                 val offer = getOfferByPriceUseCase(sms.amount)
                 val transaction = createTransactionUseCase(sms, offer)
-                forwardMessagesUseCase(transaction)
+                forwardTransactionUseCase(transaction)
             } catch (e: RecommendationTimedOutException) {
                 Log.e(TAG, e.message, e)
             } catch (e: InvalidMessageFormatException) {

@@ -9,7 +9,7 @@ private const val TAG = "RetryTransactionUseCase"
 class RetryTransactionUseCase @Inject constructor(
     private val updateTransactionUseCase: UpdateTransactionUseCase,
     private val decrementCustomerBalanceUseCase: DecrementCustomerBalanceUseCase,
-    private val forwardMessagesUseCase: ForwardMessagesUseCase,
+    private val forwardTransactionUseCase: ForwardTransactionUseCase,
 ) {
     suspend operator fun invoke(transaction: Transaction) {
         try {

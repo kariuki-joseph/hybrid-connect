@@ -11,7 +11,7 @@ import com.example.hybridconnect.domain.services.TillMessageExtractor
 import com.example.hybridconnect.domain.services.interfaces.MessageExtractor
 import com.example.hybridconnect.domain.usecase.CreateTransactionUseCase
 import com.example.hybridconnect.domain.usecase.ExtractMessageDetailsUseCase
-import com.example.hybridconnect.domain.usecase.ForwardMessagesUseCase
+import com.example.hybridconnect.domain.usecase.ForwardTransactionUseCase
 import com.example.hybridconnect.domain.usecase.GetAppStatusUseCase
 import com.example.hybridconnect.domain.usecase.GetOfferByPriceUseCase
 import com.example.hybridconnect.domain.usecase.LoginUserUseCase
@@ -19,6 +19,7 @@ import com.example.hybridconnect.domain.usecase.LogoutUserUseCase
 import com.example.hybridconnect.domain.usecase.PermissionHandlerUseCase
 import com.example.hybridconnect.domain.usecase.ReadMpesaMessagesUseCase
 import com.example.hybridconnect.domain.usecase.ResendEmailVerificationOtpUseCase
+import com.example.hybridconnect.domain.usecase.RetryUnforwardedTransactionsUseCase
 import com.example.hybridconnect.domain.usecase.SubscriptionIdFetcherUseCase
 import com.example.hybridconnect.domain.usecase.UpdateAgentUseCase
 import com.example.hybridconnect.domain.usecase.UpdateTransactionUseCase
@@ -85,14 +86,14 @@ object DomainModule {
         extractMessageDetailsUseCase: ExtractMessageDetailsUseCase,
         getOfferByPriceUseCase: GetOfferByPriceUseCase,
         createTransactionUseCase: CreateTransactionUseCase,
-        forwardMessagesUseCase: ForwardMessagesUseCase,
+        forwardTransactionUseCase: ForwardTransactionUseCase,
     ): SmsProcessor {
         return SmsProcessor(
             validateMessageUseCase,
             extractMessageDetailsUseCase,
             getOfferByPriceUseCase,
             createTransactionUseCase,
-            forwardMessagesUseCase
+            forwardTransactionUseCase
         )
     }
 
@@ -160,8 +161,8 @@ object DomainModule {
     fun provideForwardMessagesUseCase(
         @ApplicationContext context: Context,
         transactionRepository: TransactionRepository,
-    ): ForwardMessagesUseCase {
-        return ForwardMessagesUseCase(context, transactionRepository)
+    ): ForwardTransactionUseCase {
+        return ForwardTransactionUseCase(context, transactionRepository)
     }
 
     @Provides
@@ -186,5 +187,14 @@ object DomainModule {
         transactionRepository: TransactionRepository
     ): UpdateTransactionUseCase {
         return UpdateTransactionUseCase(transactionRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideRetryUnforwardedTransactionsUseCase(
+        transactionRepository: TransactionRepository,
+        forwardTransactionUseCase: ForwardTransactionUseCase
+    ): RetryUnforwardedTransactionsUseCase {
+        return RetryUnforwardedTransactionsUseCase(transactionRepository, forwardTransactionUseCase)
     }
 }

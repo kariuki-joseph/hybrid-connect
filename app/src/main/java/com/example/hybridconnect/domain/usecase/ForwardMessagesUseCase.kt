@@ -17,6 +17,12 @@ class ForwardMessagesUseCase @Inject constructor(
 ) {
     operator fun invoke(transaction: Transaction) {
         try {
+            transactionRepository.transactionQueue.add(transaction)
+            Log.d(
+                TAG,
+                "Current transaction queue size: ${transactionRepository.transactionQueue.size}"
+            )
+
             val forwardingIntent = Intent(context, MessageForwardingService::class.java)
             context.startForegroundService(forwardingIntent)
         } catch (e: Exception) {

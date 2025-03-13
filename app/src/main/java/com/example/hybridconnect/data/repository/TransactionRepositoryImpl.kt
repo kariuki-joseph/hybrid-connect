@@ -27,10 +27,6 @@ class TransactionRepositoryImpl @Inject constructor(
     private val _transactions = MutableStateFlow<List<Transaction>>(emptyList())
     override val transactionQueue = PriorityBlockingQueue<Transaction>()
 
-    init {
-        collectUnforwardedTransactions()
-    }
-
     override suspend fun createTransaction(transaction: Transaction): Long {
         try {
             val transactionId = transactionDao.insert(transaction.toEntity())
@@ -91,19 +87,4 @@ class TransactionRepositoryImpl @Inject constructor(
             throw e
         }
     }
-
-    private fun collectUnforwardedTransactions() {
-        CoroutineScope(Dispatchers.IO).launch {
-            transactionDao.getUnForwardedTransactionsFlow().collect { transactionEntities ->
-                val transactions = transactionEntities.map { entity ->
-                    val offer = entity.offerId?.let { offerRepository.getOfferById(it) }
-                    entity.toDomain(offer)
-                }
-                transactionQueue.clear()
-                transactionQueue.addAll(transactions)
-                _transactions.value = transactions
-            }
-        }
-    }
-
 }

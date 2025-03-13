@@ -166,8 +166,9 @@ object DomainModule {
     @Provides
     fun provideReadMpesaMessagesUseCase(
         @ApplicationContext context: Context,
+        subscriptionIdFetcherUseCase: SubscriptionIdFetcherUseCase,
     ): ReadMpesaMessagesUseCase {
-        return ReadMpesaMessagesUseCase(context)
+        return ReadMpesaMessagesUseCase(context, subscriptionIdFetcherUseCase)
     }
 
     @Provides

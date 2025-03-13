@@ -41,7 +41,6 @@ class ReadMpesaMessagesUseCase(
                     val timeStamp = cursor.getLong(dateIndex)
                     val simSubId = cursor.getInt(simIndex)
                     val simSlot = subscriptionIdFetcherUseCase.getSlotFromSubId(simSubId)
-                        .takeIf { slot -> slot != -1 }
 
                     messagesList.add(
                         RawSmsMessage(

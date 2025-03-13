@@ -6,7 +6,7 @@ import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.hybridconnect.domain.enums.AppSetting
+import com.example.hybridconnect.domain.enums.AppState
 import com.example.hybridconnect.domain.model.Agent
 import com.example.hybridconnect.domain.model.ConnectedApp
 import com.example.hybridconnect.domain.model.Transaction
@@ -17,7 +17,9 @@ import com.example.hybridconnect.domain.repository.TransactionRepository
 import com.example.hybridconnect.domain.services.SmsProcessingService
 import com.example.hybridconnect.domain.services.SmsProcessor
 import com.example.hybridconnect.domain.services.SocketService
+import com.example.hybridconnect.domain.services.interfaces.AppControl
 import com.example.hybridconnect.domain.usecase.LogoutUserUseCase
+import com.example.hybridconnect.domain.usecase.RetryUnforwardedTransactionsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -37,6 +39,7 @@ private const val TAG = "HomeViewModel"
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
+    private val appControl: AppControl,
     private val authRepository: AuthRepository,
     private val settingsRepository: SettingsRepository,
     private val logoutUserUseCase: LogoutUserUseCase,
@@ -44,7 +47,10 @@ class HomeViewModel @Inject constructor(
     private val socketService: SocketService,
     private val transactionRepository: TransactionRepository,
     private val smsProcessor: SmsProcessor,
+    private val retryUnforwardedTransactionsUseCase: RetryUnforwardedTransactionsUseCase,
 ) : ViewModel() {
+    val appState: StateFlow<AppState> = appControl.appState
+
     private val _connectedApps = MutableStateFlow<List<ConnectedApp>>(emptyList())
     val connectedApps: StateFlow<List<ConnectedApp>> = _connectedApps.asStateFlow()
 
@@ -52,9 +58,9 @@ class HomeViewModel @Inject constructor(
 
     private val agent: StateFlow<Agent?> = authRepository.agent
 
-    val agentFirstName: StateFlow<String?> = agent.map { agent ->
-        agent?.firstName
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), null)
+    val agentFirstName: StateFlow<String?> = agent
+        .map { it?.firstName }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), null)
 
     private val _greetings = MutableStateFlow("Hello")
     val greetings: StateFlow<String> = _greetings.asStateFlow()
@@ -120,16 +126,23 @@ class HomeViewModel @Inject constructor(
 
     fun toggleAppState() {
         viewModelScope.launch {
-            val newState = !settingsRepository.isAppActive.value
-            settingsRepository.saveSetting(AppSetting.IS_USSD_PROCESSING, false.toString())
-            if (newState) {
-                settingsRepository.setAppActive(true)
-                startService()
-                _snackbarMessage.value = "Requests processing started successfully"
-            } else {
-                settingsRepository.setAppActive(false)
-                stopService()
-                _snackbarMessage.value = "Requests processing has been paused"
+            when (appState.value) {
+                AppState.STATE_RUNNING -> {
+                    appControl.pauseApp()
+                    _snackbarMessage.value = "App has been paused"
+                }
+
+                AppState.STATE_PAUSED -> {
+                    appControl.resumeApp()
+                    _snackbarMessage.value = "App resumed successfully"
+                    retryUnforwardedTransactionsUseCase()
+                }
+
+                AppState.STATE_STOPPED -> {
+                    appControl.startApp()
+                    retryUnforwardedTransactionsUseCase()
+                    _snackbarMessage.value = "App started successfully"
+                }
             }
         }
     }
@@ -140,6 +153,17 @@ class HomeViewModel @Inject constructor(
                 socketService.disconnect()
             } else {
                 socketService.connect()
+            }
+        }
+    }
+
+    fun stopApp() {
+        viewModelScope.launch {
+            try {
+                appControl.stopApp()
+                _snackbarMessage.value = "App stopped successfully"
+            } catch (e: Exception) {
+                _snackbarMessage.value = e.message
             }
         }
     }

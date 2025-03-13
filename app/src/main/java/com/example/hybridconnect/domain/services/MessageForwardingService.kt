@@ -9,10 +9,12 @@ import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.hybridconnect.R
+import com.example.hybridconnect.domain.enums.AppState
 import com.example.hybridconnect.domain.exception.UnavailableOfferException
 import com.example.hybridconnect.domain.model.Transaction
 import com.example.hybridconnect.domain.repository.ConnectedAppRepository
 import com.example.hybridconnect.domain.repository.TransactionRepository
+import com.example.hybridconnect.domain.services.interfaces.AppControl
 import com.example.hybridconnect.domain.usecase.UpdateTransactionUseCase
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -42,6 +44,9 @@ class MessageForwardingService : Service() {
     @Inject
     lateinit var updateTransactionUseCase: UpdateTransactionUseCase
 
+    @Inject
+    lateinit var appControl: AppControl
+
     private val serviceScope = CoroutineScope(Dispatchers.IO)
 
 
@@ -63,7 +68,10 @@ class MessageForwardingService : Service() {
 
     private suspend fun processTransactions() {
         while (true) {
-            Log.d(TAG, "Looping...")
+            if(appControl.appState.value != AppState.STATE_RUNNING){
+                break
+            }
+
             val transaction = transactionRepository.transactionQueue.poll() ?: break
             val apps = connectedAppRepository.getConnectedApps().first()
             val activeApps = apps.filter { it.isOnline }

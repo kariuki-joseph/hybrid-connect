@@ -4,10 +4,12 @@ import android.content.Context
 import com.example.hybridconnect.domain.repository.AuthRepository
 import com.example.hybridconnect.domain.repository.SettingsRepository
 import com.example.hybridconnect.domain.repository.TransactionRepository
+import com.example.hybridconnect.domain.services.DefaultAppControl
 import com.example.hybridconnect.domain.services.DefaultMessageExtractor
 import com.example.hybridconnect.domain.services.SiteLinkMessageExtractor
 import com.example.hybridconnect.domain.services.SmsProcessor
 import com.example.hybridconnect.domain.services.TillMessageExtractor
+import com.example.hybridconnect.domain.services.interfaces.AppControl
 import com.example.hybridconnect.domain.services.interfaces.MessageExtractor
 import com.example.hybridconnect.domain.usecase.CreateTransactionUseCase
 import com.example.hybridconnect.domain.usecase.ExtractMessageDetailsUseCase
@@ -160,9 +162,10 @@ object DomainModule {
     @Singleton
     fun provideForwardMessagesUseCase(
         @ApplicationContext context: Context,
+        appControl: AppControl,
         transactionRepository: TransactionRepository,
     ): ForwardTransactionUseCase {
-        return ForwardTransactionUseCase(context, transactionRepository)
+        return ForwardTransactionUseCase(context, appControl, transactionRepository)
     }
 
     @Provides
@@ -193,8 +196,17 @@ object DomainModule {
     @Singleton
     fun provideRetryUnforwardedTransactionsUseCase(
         transactionRepository: TransactionRepository,
-        forwardTransactionUseCase: ForwardTransactionUseCase
+        forwardTransactionUseCase: ForwardTransactionUseCase,
     ): RetryUnforwardedTransactionsUseCase {
         return RetryUnforwardedTransactionsUseCase(transactionRepository, forwardTransactionUseCase)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAppControl(
+        @ApplicationContext context: Context,
+        settingsRepository: SettingsRepository,
+    ): AppControl {
+        return DefaultAppControl(context, settingsRepository)
     }
 }

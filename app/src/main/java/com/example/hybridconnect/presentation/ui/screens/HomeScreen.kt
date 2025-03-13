@@ -1,5 +1,7 @@
 package com.example.hybridconnect.presentation.ui.screens
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,14 +16,17 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddBox
+import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -43,6 +48,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.example.hybridconnect.domain.enums.AppState
 import com.example.hybridconnect.domain.utils.SnackbarManager
 import com.example.hybridconnect.presentation.navigation.Route
 import com.example.hybridconnect.presentation.ui.components.ConnectedAppComponent
@@ -63,6 +69,7 @@ fun HomeScreen(
     val agentFirstName by viewModel.agentFirstName.collectAsState()
     val greetings by viewModel.greetings.collectAsState()
     val isAppActive by viewModel.isAppActive.collectAsState()
+    val appState by viewModel.appState.collectAsState()
     val isConnected by viewModel.isConnected.collectAsState()
     val connectedApps by viewModel.connectedApps.collectAsState()
     val transactionQueue by viewModel.transactionQueue.collectAsState()
@@ -185,22 +192,56 @@ fun HomeScreen(
 //            onTestButtonClicked = { viewModel.testButtonClicked(it) }
 //        )
 
-        FloatingActionButton(
-            onClick = {
-                if (isAppActive) {
-                    showStopAppWarningDialog = true
-                } else {
-                    viewModel.toggleAppState()
-                }
-            },
+        Column(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(bottom = 32.dp, end = 32.dp)
+                .padding(bottom = 32.dp, end = 16.dp)
         ) {
-            Icon(
-                imageVector = if (isAppActive) Icons.Default.Stop else Icons.Default.PlayArrow,
-                contentDescription = if (isAppActive) "Stop App" else "Start App"
-            )
+            if (appState == AppState.STATE_PAUSED) {
+                FloatingActionButton(
+                    onClick = {
+                        showStopAppWarningDialog = true
+                    },
+                    modifier = Modifier
+                        .border(
+                            2.dp,
+                            MaterialTheme.colorScheme.onPrimaryContainer,
+                            RoundedCornerShape(16.dp)
+                        )
+                        .background(Color.Transparent),
+                    containerColor = Color.Transparent,
+                    elevation = FloatingActionButtonDefaults.elevation(50.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Stop,
+                        contentDescription = "Stop App"
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+            FloatingActionButton(
+                onClick = {
+                    viewModel.toggleAppState()
+                },
+                modifier = Modifier
+                    .border(
+                        2.dp,
+                        MaterialTheme.colorScheme.onPrimaryContainer,
+                        RoundedCornerShape(16.dp)
+                    )
+                    .align(Alignment.CenterHorizontally),
+                containerColor = Color.Transparent,
+                elevation = FloatingActionButtonDefaults.elevation(50.dp)
+            ) {
+                Icon(
+                    modifier = Modifier.size(28.dp),
+                    imageVector = if (appState == AppState.STATE_RUNNING) Icons.Default.Pause else Icons.Default.PlayArrow,
+                    contentDescription = if (appState == AppState.STATE_RUNNING) "Pause App" else "Resume App",
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
         }
     }
 
@@ -208,10 +249,10 @@ fun HomeScreen(
         AlertDialog(
             onDismissRequest = { showStopAppWarningDialog = false },
             title = { Text(text = "Stop App") },
-            text = { Text(text = "This action will stop the processing of ussd requests for this app until you start again") },
+            text = { Text(text = "When the app is stopped, no transactions will be recorded until you start the app again") },
             confirmButton = {
                 TextButton(onClick = {
-                    viewModel.toggleAppState()
+                    viewModel.stopApp()
                     showStopAppWarningDialog = false
                 }) {
                     Text(text = "Stop")

@@ -34,6 +34,6 @@ data class TransactionEntity(
     val offerId: UUID?,
     val message: String = "",
     val createdAt: Long = System.currentTimeMillis(),
-    @ColumnInfo(defaultValue = "false")
+    @ColumnInfo(defaultValue = "0")
     val isForwarded: Boolean = false,
 )

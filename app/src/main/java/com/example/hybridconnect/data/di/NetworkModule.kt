@@ -3,8 +3,9 @@ package com.example.hybridconnect.data.di
 import com.example.hybridconnect.data.remote.api.ApiService
 import com.example.hybridconnect.data.remote.socket.SocketServiceImpl
 import com.example.hybridconnect.domain.repository.ConnectedAppRepository
-import com.example.hybridconnect.domain.repository.PrefsRepository
+import com.example.hybridconnect.domain.repository.SettingsRepository
 import com.example.hybridconnect.domain.services.SocketService
+import com.example.hybridconnect.domain.usecase.RetryUnforwardedTransactionsUseCase
 import com.example.hybridconnect.domain.utils.Constants
 import dagger.Module
 import dagger.Provides
@@ -25,13 +26,13 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(prefsRepository: PrefsRepository): OkHttpClient {
+    fun provideOkHttpClient(settingsRepository: SettingsRepository): OkHttpClient {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
         }
         val authInterceptor = Interceptor { chain ->
             val requestBuilder = chain.request().newBuilder()
-            val token = prefsRepository.getAccessToken()
+            val token = settingsRepository.getAccessToken()
             if (token.isNotEmpty()) {
                 requestBuilder.addHeader("Authorization", "Bearer $token")
             }
@@ -65,9 +66,15 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideSocketService(
-        prefsRepository: PrefsRepository,
+        settingsRepository: SettingsRepository,
         connectedAppRepository: ConnectedAppRepository,
+        retryUnforwardedTransactionsUseCase: RetryUnforwardedTransactionsUseCase,
     ): SocketService {
-        return SocketServiceImpl(BASE_URL, prefsRepository, connectedAppRepository)
+        return SocketServiceImpl(
+            BASE_URL,
+            settingsRepository,
+            connectedAppRepository,
+            retryUnforwardedTransactionsUseCase
+        )
     }
 }

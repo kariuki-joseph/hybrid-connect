@@ -1,21 +1,21 @@
 package com.example.hybridconnect.presentation.viewmodel
 
 import android.content.Context
-import android.content.Intent
-import androidx.core.content.ContextCompat
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.hybridconnect.domain.enums.AppSetting
+import com.example.hybridconnect.domain.enums.AppState
 import com.example.hybridconnect.domain.model.Agent
 import com.example.hybridconnect.domain.model.ConnectedApp
+import com.example.hybridconnect.domain.model.Transaction
 import com.example.hybridconnect.domain.repository.AuthRepository
 import com.example.hybridconnect.domain.repository.ConnectedAppRepository
-import com.example.hybridconnect.domain.repository.PrefsRepository
+import com.example.hybridconnect.domain.repository.SettingsRepository
 import com.example.hybridconnect.domain.repository.TransactionRepository
-import com.example.hybridconnect.domain.services.SmsProcessingService
 import com.example.hybridconnect.domain.services.SocketService
-import com.example.hybridconnect.domain.usecase.ForwardMessagesUseCase
+import com.example.hybridconnect.domain.services.interfaces.AppControl
 import com.example.hybridconnect.domain.usecase.LogoutUserUseCase
+import com.example.hybridconnect.domain.usecase.RetryUnforwardedTransactionsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -35,24 +35,27 @@ private const val TAG = "HomeViewModel"
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
+    private val appControl: AppControl,
     private val authRepository: AuthRepository,
-    private val prefsRepository: PrefsRepository,
+    private val settingsRepository: SettingsRepository,
     private val logoutUserUseCase: LogoutUserUseCase,
     private val connectedAppRepository: ConnectedAppRepository,
     private val socketService: SocketService,
     private val transactionRepository: TransactionRepository,
-    private val forwardMessagesUseCase: ForwardMessagesUseCase,
+    private val retryUnforwardedTransactionsUseCase: RetryUnforwardedTransactionsUseCase,
 ) : ViewModel() {
-    private val _connectedApps = MutableStateFlow<List<ConnectedApp>>(emptyList())
-    val connectedApps: StateFlow<List<ConnectedApp>> = _connectedApps.asStateFlow()
+    val appState: StateFlow<AppState> = appControl.appState
 
-    val isAppActive: StateFlow<Boolean> = prefsRepository.isAppActive
+    val connectedApps: StateFlow<List<ConnectedApp>> = connectedAppRepository.getConnectedApps()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), emptyList())
+
+    val isAppActive: StateFlow<Boolean> = settingsRepository.isAppActive
 
     private val agent: StateFlow<Agent?> = authRepository.agent
 
-    val agentFirstName: StateFlow<String?> = agent.map { agent ->
-        agent?.firstName
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), null)
+    val agentFirstName: StateFlow<String?> = agent
+        .map { it?.firstName }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), null)
 
     private val _greetings = MutableStateFlow("Hello")
     val greetings: StateFlow<String> = _greetings.asStateFlow()
@@ -64,20 +67,22 @@ class HomeViewModel @Inject constructor(
     private val _snackbarMessage = MutableStateFlow<String?>(null)
     val snackbarMessage: StateFlow<String?> = _snackbarMessage
 
-    private val _isDeletingApp = MutableStateFlow(false)
-    val isDeletingApp: StateFlow<Boolean> = _isDeletingApp.asStateFlow()
-
     val isConnected: StateFlow<Boolean> = socketService.isConnected
 
-    val queueSize: StateFlow<Int> = transactionRepository.queueSize
+    val transactionQueue: StateFlow<List<Transaction>> = transactionRepository.transactionQueueFlow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), emptyList())
+
+    private val _connectedOffersCount = MutableStateFlow<Map<String, Int>>(emptyMap())
+    val connectedOffersCount: StateFlow<Map<String, Int>> = _connectedOffersCount.asStateFlow()
 
     init {
         loadAgent()
-        loadConnectedApps()
         createGreetings()
         startGreetingTimer()
-        startOnlineStatusCallback()
+        loadConnectedOffersCount()
+        observeConnectedApps()
     }
+
 
     private fun loadAgent() {
         viewModelScope.launch(Dispatchers.IO) {
@@ -89,55 +94,48 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private fun loadConnectedApps() {
-        viewModelScope.launch(Dispatchers.IO) {
+    private fun loadConnectedOffersCount() {
+        viewModelScope.launch {
             try {
-                connectedAppRepository.getConnectedApps().collect { apps ->
-                    _connectedApps.value = apps
-
-                    apps.any { app ->
-                        if (app.isOnline) {
-                            forwardMessagesUseCase.startMessageForwardingWorker()
-                            true
-                        } else {
-                            forwardMessagesUseCase.cancelMessageForwardingWork()
-                            false
-                        }
-                    }
+                connectedAppRepository.getAllConnectedOffersCount().collect { offersCountMap ->
+                    _connectedOffersCount.value = offersCountMap
                 }
             } catch (e: Exception) {
-                _snackbarMessage.value = e.message.toString()
+                _snackbarMessage.value = e.message
             }
-
         }
     }
 
-    fun deleteConnectedApp(connectedApp: ConnectedApp) {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                _isDeletingApp.value = true
-                connectedAppRepository.deleteConnectedApp(connectedApp)
-            } catch (e: Exception) {
-                _snackbarMessage.value = e.message.toString()
-            } finally {
-                _isDeletingApp.value = false
+    private fun observeConnectedApps() {
+        viewModelScope.launch {
+            connectedAppRepository.getConnectedApps().collect { apps ->
+                if (apps.none { it.isOnline }) {
+                    Log.d(TAG, "No app was found online. Clearing queue")
+                    transactionRepository.transactionQueue.clear()
+                }
             }
-
         }
     }
 
     fun toggleAppState() {
         viewModelScope.launch {
-            val newState = !prefsRepository.isAppActive.value
-            prefsRepository.saveSetting(AppSetting.IS_USSD_PROCESSING, false.toString())
-            if (newState) {
-                prefsRepository.setAppActive(true)
-                startService()
-                _snackbarMessage.value = "Requests processing started successfully"
-            } else {
-                prefsRepository.setAppActive(false)
-                stopService()
-                _snackbarMessage.value = "Requests processing has been paused"
+            when (appState.value) {
+                AppState.STATE_RUNNING -> {
+                    appControl.pauseApp()
+                    _snackbarMessage.value = "App has been paused"
+                }
+
+                AppState.STATE_PAUSED -> {
+                    appControl.resumeApp()
+                    _snackbarMessage.value = "App resumed successfully"
+                    retryUnforwardedTransactionsUseCase()
+                }
+
+                AppState.STATE_STOPPED -> {
+                    appControl.startApp()
+                    retryUnforwardedTransactionsUseCase()
+                    _snackbarMessage.value = "App started successfully"
+                }
             }
         }
     }
@@ -148,6 +146,17 @@ class HomeViewModel @Inject constructor(
                 socketService.disconnect()
             } else {
                 socketService.connect()
+            }
+        }
+    }
+
+    fun stopApp() {
+        viewModelScope.launch {
+            try {
+                appControl.stopApp()
+                _snackbarMessage.value = "App stopped successfully"
+            } catch (e: Exception) {
+                _snackbarMessage.value = e.message
             }
         }
     }
@@ -186,27 +195,5 @@ class HomeViewModel @Inject constructor(
 
     fun resetSnackbarMessage() {
         _snackbarMessage.value = null
-    }
-
-    private fun startService() {
-        val serviceIntent = Intent(context, SmsProcessingService::class.java)
-        ContextCompat.startForegroundService(context, serviceIntent)
-    }
-
-    private fun stopService() {
-        val serviceIntent = Intent(context, SmsProcessingService::class.java)
-        context.stopService(serviceIntent)
-    }
-
-    private fun startOnlineStatusCallback() {
-        viewModelScope.launch {
-            isConnected.collect { connected ->
-                if (connected) {
-                    forwardMessagesUseCase.startMessageForwardingWorker()
-                } else {
-                    forwardMessagesUseCase.cancelMessageForwardingWork()
-                }
-            }
-        }
     }
 }

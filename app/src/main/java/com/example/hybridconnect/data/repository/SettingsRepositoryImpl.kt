@@ -1,12 +1,12 @@
 package com.example.hybridconnect.data.repository
 
 import com.example.hybridconnect.data.enums.PrefKey
-import com.example.hybridconnect.domain.enums.SimCard
 import com.example.hybridconnect.data.local.dao.PrefsDao
 import com.example.hybridconnect.data.local.entity.PrefEntity
 import com.example.hybridconnect.data.local.preferences.SharedPrefsManager
 import com.example.hybridconnect.domain.enums.AppSetting
-import com.example.hybridconnect.domain.repository.PrefsRepository
+import com.example.hybridconnect.domain.enums.SimCard
+import com.example.hybridconnect.domain.repository.SettingsRepository
 import com.example.hybridconnect.domain.utils.Constants
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -14,15 +14,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class PrefsRepositoryImpl @Inject constructor(
+class SettingsRepositoryImpl @Inject constructor(
     private val sharedPrefsManager: SharedPrefsManager,
     private val prefsDao: PrefsDao,
-) : PrefsRepository {
+) : SettingsRepository {
     private val _isAppActive = MutableStateFlow(false)
     override val isAppActive: StateFlow<Boolean> = _isAppActive.asStateFlow()
 
@@ -30,6 +29,7 @@ class PrefsRepositoryImpl @Inject constructor(
         val pref = PrefEntity(setting.name, value)
         prefsDao.set(pref)
     }
+
     override suspend fun getSetting(setting: AppSetting): String {
         val pref = prefsDao.getSetting(setting.name)
         return pref?.value ?: ""
@@ -99,6 +99,11 @@ class PrefsRepositoryImpl @Inject constructor(
     override suspend fun getMaxUssdRetries(): Int {
         val pref = prefsDao.getSetting(Constants.KEY_MAX_USSD_RETRIES)
         return pref?.value?.toInt() ?: 3
+    }
+
+    override suspend fun getMessageBufferSize(): Int {
+        val pref = prefsDao.getSetting(AppSetting.MESSAGES_BUFFER_SIZE.name)
+        return pref?.value?.toInt() ?: 1
     }
 
     private fun getAppActiveStatus() {

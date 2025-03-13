@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 
 sealed class DrawerItem(val title: String, val icon: ImageVector) {
     data object Home : DrawerItem("Home", Icons.Outlined.Home)
+    data object Offers : DrawerItem("Offers", Icons.Outlined.LocalOffer)
     data object Settings : DrawerItem("Settings", Icons.Outlined.Settings)
     data object Logout : DrawerItem("Logout", Icons.AutoMirrored.Outlined.Logout)
 }

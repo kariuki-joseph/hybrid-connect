@@ -5,8 +5,9 @@ import com.example.hybridconnect.domain.enums.AppSetting
 import com.example.hybridconnect.domain.enums.SocketEvent
 import com.example.hybridconnect.domain.model.ConnectedApp
 import com.example.hybridconnect.domain.repository.ConnectedAppRepository
-import com.example.hybridconnect.domain.repository.PrefsRepository
+import com.example.hybridconnect.domain.repository.SettingsRepository
 import com.example.hybridconnect.domain.services.SocketService
+import com.example.hybridconnect.domain.usecase.RetryUnforwardedTransactionsUseCase
 import io.socket.client.IO
 import io.socket.client.Socket
 import kotlinx.coroutines.CoroutineScope
@@ -21,8 +22,9 @@ private const val TAG = "SocketServiceImpl"
 
 class SocketServiceImpl(
     private val serverUrl: String,
-    private val prefsRepository: PrefsRepository,
-    private val connectedAppRepository: ConnectedAppRepository
+    private val settingsRepository: SettingsRepository,
+    private val connectedAppRepository: ConnectedAppRepository,
+    private val retryUnforwardedTransactionsUseCase: RetryUnforwardedTransactionsUseCase
 ) : SocketService {
     private lateinit var socket: Socket
     private val eventListeners = mutableMapOf<String, (List<Any>) -> Unit>()
@@ -34,7 +36,7 @@ class SocketServiceImpl(
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 Log.d(TAG, "Trying to connect to socket...")
-                val agentId = prefsRepository.getSetting(AppSetting.AGENT_ID)
+                val agentId = settingsRepository.getSetting(AppSetting.AGENT_ID)
                 if (agentId.isEmpty()) {
                     invokeListener(
                         SocketEvent.EVENT_CONNECT_ERROR.name,
@@ -118,28 +120,34 @@ class SocketServiceImpl(
     }
 
     private fun registerOnlineStatusListeners() {
-        socket.on(SocketEvent.EVENT_APP_CONNECTED.name) { args ->
-            val connectId = args.getOrNull(0) as? String ?: return@on
-            CoroutineScope(Dispatchers.IO).launch {
-                connectedAppRepository.updateOnlineStatus(connectId, true)
-            }
-        }
+        socket.on(SocketEvent.EVENT_APP_CONNECTED.name, ::handleAppConnected)
+        socket.on(SocketEvent.EVENT_APP_DISCONNECTED.name, ::handleAppDisconnected)
+    }
 
-            socket.on(SocketEvent.EVENT_APP_DISCONNECTED.name) { args ->
-                val connectId = args.getOrNull(0) as? String ?: return@on
-            CoroutineScope(Dispatchers.IO).launch {
-                connectedAppRepository.updateOnlineStatus(connectId, false)
-            }
+    private fun handleAppConnected(args: Array<Any>) {
+        val connectId = args.getOrNull(0) as? String ?: return
+        onAppConnectedCallBack(connectId)
+    }
+
+
+    private fun handleAppDisconnected(args: Array<Any>) {
+        val connectId = args.getOrNull(0) as? String ?: return
+        CoroutineScope(Dispatchers.IO).launch {
+            connectedAppRepository.updateOnlineStatus(connectId, false)
         }
     }
 
     private fun markAllAppsOffline() {
         CoroutineScope(Dispatchers.IO).launch {
-            val connectedApps = connectedAppRepository.getConnectedApps().value
-            connectedApps.forEach { app ->
-                connectedAppRepository.updateOnlineStatus(app.connectId, false)
-            }
+            connectedAppRepository.markAllAppsOffline()
             Log.d(TAG, "All connected apps marked as offline")
+        }
+    }
+
+    private fun onAppConnectedCallBack(connectId: String) {
+        CoroutineScope(Dispatchers.IO).launch {
+            connectedAppRepository.updateOnlineStatus(connectId, true)
+            retryUnforwardedTransactionsUseCase()
         }
     }
 }

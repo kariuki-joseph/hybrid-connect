@@ -38,13 +38,17 @@
             </intent-filter>
         </activity>
 
-        <!--    SMS Listening Service    -->
         <service
             android:name=".domain.services.SmsProcessingService"
             android:exported="false"
             android:foregroundServiceType="dataSync"
             />
-        <!-- SMS Broadcast Receiver -->
+
+        <service
+            android:name=".domain.services.MessageForwardingService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+
         <receiver android:name=".domain.services.SmsReceiver"
             android:exported="true"
             android:permission="android.permission.BROADCAST_SMS">

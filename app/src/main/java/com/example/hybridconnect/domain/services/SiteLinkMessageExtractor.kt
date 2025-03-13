@@ -12,7 +12,9 @@ class SiteLinkMessageExtractor : MessageExtractor {
         val senderWithPrefix = parts.getOrNull(0)?.trim() ?: "Unknown"
         val sender = senderWithPrefix.removePrefix("BHSL").trim()
         val amount = parts.getOrNull(1)?.trim()?.toIntOrNull() ?: 0
+        val mpesaCode = parts.getOrNull(2)?.split(" ")?.getOrNull(0) ?: throw Exception("Invalid M-Pesa Code")
         return SiteLinkMessage(
+            mpesaCode = mpesaCode,
             senderName = sender,
             senderPhone = sender,
             amount = amount,

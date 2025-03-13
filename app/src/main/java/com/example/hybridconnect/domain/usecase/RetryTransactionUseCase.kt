@@ -1,16 +1,15 @@
 package com.example.hybridconnect.domain.usecase
 
 import android.util.Log
-import com.example.hybridconnect.domain.enums.TransactionStatus
 import com.example.hybridconnect.domain.model.Transaction
 import javax.inject.Inject
 
 private const val TAG = "RetryTransactionUseCase"
 
 class RetryTransactionUseCase @Inject constructor(
-    private val updateTransactionStatusUseCase: UpdateTransactionStatusUseCase,
+    private val updateTransactionUseCase: UpdateTransactionUseCase,
     private val decrementCustomerBalanceUseCase: DecrementCustomerBalanceUseCase,
-    private val forwardMessagesUseCase: ForwardMessagesUseCase,
+    private val forwardTransactionUseCase: ForwardTransactionUseCase,
 ) {
     suspend operator fun invoke(transaction: Transaction) {
         try {

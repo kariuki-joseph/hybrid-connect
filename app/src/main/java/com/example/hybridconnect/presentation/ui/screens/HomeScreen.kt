@@ -1,5 +1,7 @@
 package com.example.hybridconnect.presentation.ui.screens
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,19 +16,23 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddBox
+import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -38,14 +44,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
-import com.example.hybridconnect.domain.model.ConnectedApp
+import com.example.hybridconnect.domain.enums.AppState
 import com.example.hybridconnect.domain.utils.SnackbarManager
 import com.example.hybridconnect.presentation.navigation.Route
 import com.example.hybridconnect.presentation.ui.components.ConnectedAppComponent
+import com.example.hybridconnect.presentation.ui.components.CustomButton
 import com.example.hybridconnect.presentation.viewmodel.HomeViewModel
+import com.example.hybridconnect.presentation.viewmodel.SmsViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -54,20 +63,21 @@ fun HomeScreen(
     navController: NavHostController,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel(),
+    smsViewModel: SmsViewModel = hiltViewModel(),
 ) {
     val scope = rememberCoroutineScope()
     val agentFirstName by viewModel.agentFirstName.collectAsState()
     val greetings by viewModel.greetings.collectAsState()
     val isAppActive by viewModel.isAppActive.collectAsState()
+    val appState by viewModel.appState.collectAsState()
     val isConnected by viewModel.isConnected.collectAsState()
     val connectedApps by viewModel.connectedApps.collectAsState()
-    val queueSize by viewModel.queueSize.collectAsState()
-    val isDeletingApp by viewModel.isDeletingApp.collectAsState()
+    val transactionQueue by viewModel.transactionQueue.collectAsState()
+    val connectedOffersCount by viewModel.connectedOffersCount.collectAsState()
     var showStopAppWarningDialog by remember { mutableStateOf(false) }
     val logoutSuccess by viewModel.logoutSuccess.collectAsState()
     val snackbarMessage by viewModel.snackbarMessage.collectAsState()
-    var selectedApp by remember { mutableStateOf<ConnectedApp?>(null) }
-    var showConfirmDeleteAppDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     LaunchedEffect(logoutSuccess) {
         if (logoutSuccess) {
@@ -85,6 +95,10 @@ fun HomeScreen(
             SnackbarManager.showMessage(scope, it)
             viewModel.resetSnackbarMessage()
         }
+    }
+
+    LaunchedEffect(true) {
+        smsViewModel.readMPEMASMS(context = context)
     }
 
     Box(
@@ -121,7 +135,7 @@ fun HomeScreen(
                     ) {
                         IconButton(
                             onClick = { viewModel.toggleOnlineState() }
-                        ){
+                        ) {
                             Icon(
                                 imageVector = if (isConnected) Icons.Default.Wifi else Icons.Default.WifiOff,
                                 contentDescription = if (isAppActive) "Wifi Off" else "Wifi On",
@@ -152,36 +166,82 @@ fun HomeScreen(
                         .weight(1f)
                 ) {
                     items(connectedApps) { app ->
+                        val offersCount = connectedOffersCount[app.connectId] ?: 0
                         ConnectedAppComponent(
                             connectedApp = app,
-                            queueSize = queueSize,
-                            isDeletingApp = isDeletingApp,
-                            onDeleteApp = {
-                                selectedApp = it
-                                showConfirmDeleteAppDialog = true
+                            queueSize = transactionQueue.size,
+                            connectedOffersCount = offersCount,
+                            onClick = {
+                                navController.navigate(
+                                    Route.AppDetails.name
+                                        .replace("{connectId}", app.connectId)
+                                )
                             }
                         )
+                        Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
             }
         }
 
-        FloatingActionButton(
-            onClick = {
-                if (isAppActive) {
-                    showStopAppWarningDialog = true
-                } else {
-                    viewModel.toggleAppState()
-                }
-            },
+//        TestSendComponent(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .align(Alignment.BottomStart)
+//                .padding(start = 16.dp, bottom = 32.dp),
+//            onTestButtonClicked = { viewModel.testButtonClicked(it) }
+//        )
+
+        Column(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(bottom = 32.dp, end = 32.dp)
+                .padding(bottom = 32.dp, end = 16.dp)
         ) {
-            Icon(
-                imageVector = if (isAppActive) Icons.Default.Stop else Icons.Default.PlayArrow,
-                contentDescription = if (isAppActive) "Stop App" else "Start App"
-            )
+            if (appState == AppState.STATE_PAUSED) {
+                FloatingActionButton(
+                    onClick = {
+                        showStopAppWarningDialog = true
+                    },
+                    modifier = Modifier
+                        .border(
+                            2.dp,
+                            MaterialTheme.colorScheme.onPrimaryContainer,
+                            RoundedCornerShape(16.dp)
+                        )
+                        .background(Color.Transparent),
+                    containerColor = Color.Transparent,
+                    elevation = FloatingActionButtonDefaults.elevation(50.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Stop,
+                        contentDescription = "Stop App"
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+            FloatingActionButton(
+                onClick = {
+                    viewModel.toggleAppState()
+                },
+                modifier = Modifier
+                    .border(
+                        2.dp,
+                        MaterialTheme.colorScheme.onPrimaryContainer,
+                        RoundedCornerShape(16.dp)
+                    )
+                    .align(Alignment.CenterHorizontally),
+                containerColor = Color.Transparent,
+                elevation = FloatingActionButtonDefaults.elevation(50.dp)
+            ) {
+                Icon(
+                    modifier = Modifier.size(28.dp),
+                    imageVector = if (appState == AppState.STATE_RUNNING) Icons.Default.Pause else Icons.Default.PlayArrow,
+                    contentDescription = if (appState == AppState.STATE_RUNNING) "Pause App" else "Resume App",
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
         }
     }
 
@@ -189,10 +249,10 @@ fun HomeScreen(
         AlertDialog(
             onDismissRequest = { showStopAppWarningDialog = false },
             title = { Text(text = "Stop App") },
-            text = { Text(text = "This action will stop the processing of ussd requests for this app until you start again") },
+            text = { Text(text = "When the app is stopped, no transactions will be recorded until you start the app again") },
             confirmButton = {
                 TextButton(onClick = {
-                    viewModel.toggleAppState()
+                    viewModel.stopApp()
                     showStopAppWarningDialog = false
                 }) {
                     Text(text = "Stop")
@@ -205,32 +265,28 @@ fun HomeScreen(
             }
         )
     }
+}
 
 
-    if (showConfirmDeleteAppDialog) {
-        AlertDialog(
-            onDismissRequest = {
-                showConfirmDeleteAppDialog = false
-                selectedApp = null
+@Composable
+fun TestSendComponent(
+    modifier: Modifier = Modifier,
+    onTestButtonClicked: (String) -> Unit,
+) {
+    Row(
+        modifier = modifier
+    ) {
+        var amount by remember { mutableStateOf("5") }
+        TextField(
+            value = amount,
+            onValueChange = { value ->
+                amount = value
             },
-            title = { Text(text = "Delete App") },
-            text = { Text(text = "You won't be able to send messages to this app until you re-connect again") },
-            confirmButton = {
-                TextButton(onClick = {
-                    selectedApp?.let { viewModel.deleteConnectedApp(it) }
-                    showConfirmDeleteAppDialog = false
-                }) {
-                    Text(text = "Delete")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = {
-                    showConfirmDeleteAppDialog = false
-                    selectedApp = null
-                }) {
-                    Text(text = "Cancel")
-                }
-            }
+            modifier = Modifier.width(70.dp)
         )
+        Spacer(modifier = Modifier.width(8.dp))
+        CustomButton(onClick = { onTestButtonClicked(amount) }) {
+            Text("Test Send")
+        }
     }
 }

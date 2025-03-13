@@ -12,9 +12,13 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.hybridconnect.presentation.ui.screens.AddConnectedAppScreen
+import com.example.hybridconnect.presentation.ui.screens.AddOfferScreen
+import com.example.hybridconnect.presentation.ui.screens.AppDetailsScreen
+import com.example.hybridconnect.presentation.ui.screens.EditOfferScreen
 import com.example.hybridconnect.presentation.ui.screens.EditProfileScreen
 import com.example.hybridconnect.presentation.ui.screens.HomeScreen
 import com.example.hybridconnect.presentation.ui.screens.LoginScreen
+import com.example.hybridconnect.presentation.ui.screens.OffersScreen
 import com.example.hybridconnect.presentation.ui.screens.OnBoardingScreen1
 import com.example.hybridconnect.presentation.ui.screens.OnBoardingScreen2
 import com.example.hybridconnect.presentation.ui.screens.OtpVerificationScreen
@@ -25,6 +29,7 @@ import com.example.hybridconnect.presentation.ui.screens.ResetPasswordScreen
 import com.example.hybridconnect.presentation.ui.screens.SettingsScreen
 import com.example.hybridconnect.presentation.ui.screens.SplashScreen
 import com.example.hybridconnect.presentation.viewmodel.SettingsViewModel
+import java.util.UUID
 
 @Composable
 fun NavGraph(
@@ -98,6 +103,26 @@ fun NavGraph(
                 navController = navController
             )
         }
+        composable(Route.Offers.name) {
+            OffersScreen(
+                modifier = Modifier,
+                navController = navController
+            )
+        }
+        composable(Route.AddOffer.name) {
+            AddOfferScreen(
+                navController = navController
+            )
+        }
+        composable(Route.EditOffer.name) {
+            val offerId = it.arguments?.getString("offerId")
+            offerId?.let { id ->
+                EditOfferScreen(
+                    offerId = UUID.fromString(id),
+                    navController = navController
+                )
+            }
+        }
         composable(Route.Settings.name) {
             SettingsScreen(
                 navController = navController
@@ -111,6 +136,12 @@ fun NavGraph(
         }
         composable(Route.AddConnectedApp.name) {
             AddConnectedAppScreen(navController = navController)
+        }
+        composable(Route.AppDetails.name) {
+            val connectId = it.arguments?.getString("connectId")
+            if (connectId != null) {
+                AppDetailsScreen(navController = navController, connectId = connectId)
+            }
         }
         composable(Route.ResetPassword.name) {
             val email = it.arguments?.getString("email") ?: ""

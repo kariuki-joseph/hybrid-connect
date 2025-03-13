@@ -18,4 +18,6 @@ interface OfferRepository {
     suspend fun deleteOffer(offer: Offer)
 
     suspend fun updateOffer(updatedOffer: Offer)
+
+    fun createSubscriptionOffer(amount: Int): Offer
 }

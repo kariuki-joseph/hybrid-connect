@@ -52,6 +52,12 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+
+    kapt {
+        arguments {
+            arg("room.schemaLocation", "$projectDir/schemas")
+        }
+    }
 }
 
 dependencies {
@@ -98,7 +104,7 @@ dependencies {
     implementation("com.squareup.okhttp3:logging-interceptor:4.9.3")
 
     // charts
-    implementation ("io.github.ehsannarmani:compose-charts:0.1.0")
+    implementation("io.github.ehsannarmani:compose-charts:0.1.0")
 
     // socket.io
 

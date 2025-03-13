@@ -2,22 +2,29 @@ package com.example.hybridconnect.domain.di
 
 import android.content.Context
 import com.example.hybridconnect.domain.repository.AuthRepository
-import com.example.hybridconnect.domain.repository.PrefsRepository
+import com.example.hybridconnect.domain.repository.SettingsRepository
 import com.example.hybridconnect.domain.repository.TransactionRepository
+import com.example.hybridconnect.domain.services.DefaultAppControl
 import com.example.hybridconnect.domain.services.DefaultMessageExtractor
 import com.example.hybridconnect.domain.services.SiteLinkMessageExtractor
 import com.example.hybridconnect.domain.services.SmsProcessor
 import com.example.hybridconnect.domain.services.TillMessageExtractor
+import com.example.hybridconnect.domain.services.interfaces.AppControl
 import com.example.hybridconnect.domain.services.interfaces.MessageExtractor
+import com.example.hybridconnect.domain.usecase.CreateTransactionUseCase
 import com.example.hybridconnect.domain.usecase.ExtractMessageDetailsUseCase
-import com.example.hybridconnect.domain.usecase.ForwardMessagesUseCase
+import com.example.hybridconnect.domain.usecase.ForwardTransactionUseCase
 import com.example.hybridconnect.domain.usecase.GetAppStatusUseCase
+import com.example.hybridconnect.domain.usecase.GetOfferByPriceUseCase
 import com.example.hybridconnect.domain.usecase.LoginUserUseCase
 import com.example.hybridconnect.domain.usecase.LogoutUserUseCase
 import com.example.hybridconnect.domain.usecase.PermissionHandlerUseCase
+import com.example.hybridconnect.domain.usecase.ReadMpesaMessagesUseCase
 import com.example.hybridconnect.domain.usecase.ResendEmailVerificationOtpUseCase
+import com.example.hybridconnect.domain.usecase.RetryUnforwardedTransactionsUseCase
 import com.example.hybridconnect.domain.usecase.SubscriptionIdFetcherUseCase
 import com.example.hybridconnect.domain.usecase.UpdateAgentUseCase
+import com.example.hybridconnect.domain.usecase.UpdateTransactionUseCase
 import com.example.hybridconnect.domain.usecase.ValidateMessageUseCase
 import com.example.hybridconnect.domain.usecase.VerifyOtpUseCase
 import dagger.Module
@@ -36,15 +43,15 @@ object DomainModule {
     @Singleton
     fun provideSubscriptionIdFetcherUseCase(
         @ApplicationContext context: Context,
-        prefsRepository: PrefsRepository,
+        settingsRepository: SettingsRepository,
     ): SubscriptionIdFetcherUseCase {
-        return SubscriptionIdFetcherUseCase(context, prefsRepository)
+        return SubscriptionIdFetcherUseCase(context, settingsRepository)
     }
 
     @Provides
     @Singleton
-    fun provideGetAppStatusUseCase(prefsRepository: PrefsRepository): GetAppStatusUseCase {
-        return GetAppStatusUseCase(prefsRepository)
+    fun provideGetAppStatusUseCase(settingsRepository: SettingsRepository): GetAppStatusUseCase {
+        return GetAppStatusUseCase(settingsRepository)
     }
 
     @Provides
@@ -79,14 +86,16 @@ object DomainModule {
     fun provideSmsProcessor(
         validateMessageUseCase: ValidateMessageUseCase,
         extractMessageDetailsUseCase: ExtractMessageDetailsUseCase,
-        transactionRepository: TransactionRepository,
-        forwardMessagesUseCase: ForwardMessagesUseCase,
+        getOfferByPriceUseCase: GetOfferByPriceUseCase,
+        createTransactionUseCase: CreateTransactionUseCase,
+        forwardTransactionUseCase: ForwardTransactionUseCase,
     ): SmsProcessor {
         return SmsProcessor(
             validateMessageUseCase,
             extractMessageDetailsUseCase,
-            transactionRepository,
-            forwardMessagesUseCase
+            getOfferByPriceUseCase,
+            createTransactionUseCase,
+            forwardTransactionUseCase
         )
     }
 
@@ -94,18 +103,18 @@ object DomainModule {
     @Singleton
     fun provideLoginUserUseCase(
         authRepository: AuthRepository,
-        prefsRepository: PrefsRepository,
+        settingsRepository: SettingsRepository,
     ): LoginUserUseCase {
-        return LoginUserUseCase(authRepository, prefsRepository)
+        return LoginUserUseCase(authRepository, settingsRepository)
     }
 
     @Provides
     @Singleton
     fun provideVerifyOtpUseCase(
-        prefsRepository: PrefsRepository,
+        settingsRepository: SettingsRepository,
         authRepository: AuthRepository,
     ): VerifyOtpUseCase {
-        return VerifyOtpUseCase(prefsRepository, authRepository)
+        return VerifyOtpUseCase(settingsRepository, authRepository)
     }
 
     @Provides
@@ -117,16 +126,16 @@ object DomainModule {
     @Provides
     @Singleton
     fun provideLogoutUserUseCase(
-        prefsRepository: PrefsRepository,
+        settingsRepository: SettingsRepository,
         authRepository: AuthRepository,
     ): LogoutUserUseCase {
-        return LogoutUserUseCase(prefsRepository, authRepository)
+        return LogoutUserUseCase(settingsRepository, authRepository)
     }
 
     @Provides
     @Singleton
-    fun provideValidateMessageUseCase(prefsRepository: PrefsRepository): ValidateMessageUseCase {
-        return ValidateMessageUseCase(prefsRepository)
+    fun provideValidateMessageUseCase(settingsRepository: SettingsRepository): ValidateMessageUseCase {
+        return ValidateMessageUseCase(settingsRepository)
     }
 
     @Provides
@@ -153,8 +162,51 @@ object DomainModule {
     @Singleton
     fun provideForwardMessagesUseCase(
         @ApplicationContext context: Context,
+        appControl: AppControl,
+        transactionRepository: TransactionRepository,
+    ): ForwardTransactionUseCase {
+        return ForwardTransactionUseCase(context, appControl, transactionRepository)
+    }
+
+    @Provides
+    fun provideReadMpesaMessagesUseCase(
+        @ApplicationContext context: Context,
+        subscriptionIdFetcherUseCase: SubscriptionIdFetcherUseCase,
+    ): ReadMpesaMessagesUseCase {
+        return ReadMpesaMessagesUseCase(context, subscriptionIdFetcherUseCase)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCreateTransactionUseCase(
+        transactionRepository: TransactionRepository,
+    ): CreateTransactionUseCase {
+        return CreateTransactionUseCase(transactionRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideUpdateTransactionStatusUseCase(
         transactionRepository: TransactionRepository
-    ): ForwardMessagesUseCase {
-        return ForwardMessagesUseCase(context, transactionRepository)
+    ): UpdateTransactionUseCase {
+        return UpdateTransactionUseCase(transactionRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideRetryUnforwardedTransactionsUseCase(
+        transactionRepository: TransactionRepository,
+        forwardTransactionUseCase: ForwardTransactionUseCase,
+    ): RetryUnforwardedTransactionsUseCase {
+        return RetryUnforwardedTransactionsUseCase(transactionRepository, forwardTransactionUseCase)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAppControl(
+        @ApplicationContext context: Context,
+        settingsRepository: SettingsRepository,
+    ): AppControl {
+        return DefaultAppControl(context, settingsRepository)
     }
 }

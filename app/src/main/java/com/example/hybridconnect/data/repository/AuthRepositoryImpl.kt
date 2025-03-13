@@ -17,7 +17,7 @@ import com.example.hybridconnect.domain.enums.AppSetting
 import com.example.hybridconnect.domain.model.Agent
 import com.example.hybridconnect.domain.model.AuthDetails
 import com.example.hybridconnect.domain.repository.AuthRepository
-import com.example.hybridconnect.domain.repository.PrefsRepository
+import com.example.hybridconnect.domain.repository.SettingsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.util.UUID
@@ -26,7 +26,7 @@ private const val TAG = "AuthRepositoryImpl"
 
 class AuthRepositoryImpl(
     private val agentDao: AgentDao,
-    private val prefsRepository: PrefsRepository,
+    private val settingsRepository: SettingsRepository,
     private val apiService: ApiService,
 ) : AuthRepository {
 
@@ -52,7 +52,7 @@ class AuthRepositoryImpl(
             if (token.isNullOrEmpty()) {
                 throw Exception("Couldn't get registration token. Please try again")
             }
-            prefsRepository.saveAccessToken(token)
+            settingsRepository.saveAccessToken(token)
         } catch (e: Exception) {
             throw e
         }
@@ -91,7 +91,7 @@ class AuthRepositoryImpl(
 
     override suspend fun fetchAgent(): Agent {
         try {
-            val agentId = prefsRepository.getSetting(AppSetting.AGENT_ID)
+            val agentId = settingsRepository.getSetting(AppSetting.AGENT_ID)
             if (agentId.isEmpty()) throw Exception("Seems you have been logged out")
             val agent = agentDao.getAgent(UUID.fromString(agentId))?.toDomain()
                 ?: throw Exception("Agent not found")
@@ -148,7 +148,7 @@ class AuthRepositoryImpl(
             }
             val token = response.body()?.data?.token
                 ?: throw Exception("Invalid OTP response, please try again later")
-            prefsRepository.saveAccessToken(token)
+            settingsRepository.saveAccessToken(token)
         } catch (e: Exception) {
             Log.e(TAG, "Failed to verify OTP ${e.message}")
             throw e

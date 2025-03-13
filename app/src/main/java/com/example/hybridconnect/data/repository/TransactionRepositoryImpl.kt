@@ -4,8 +4,6 @@ import android.util.Log
 import com.example.hybridconnect.data.local.dao.TransactionDao
 import com.example.hybridconnect.data.mappers.toDomain
 import com.example.hybridconnect.data.mappers.toEntity
-import com.example.hybridconnect.domain.model.Offer
-import com.example.hybridconnect.domain.model.SmsMessage
 import com.example.hybridconnect.domain.model.Transaction
 import com.example.hybridconnect.domain.repository.OfferRepository
 import com.example.hybridconnect.domain.repository.TransactionRepository
@@ -34,11 +32,12 @@ class TransactionRepositoryImpl @Inject constructor(
         updateTransactionSize()
     }
 
-    override suspend fun createTransaction(transaction: Transaction) {
+    override suspend fun createTransaction(transaction: Transaction): Long {
         try {
-            transactionDao.insert(transaction.toEntity())
-            _transactions.value += transaction
+            val transactionId = transactionDao.insert(transaction.toEntity())
+            _transactions.value += transaction.copy(id = transactionId)
             updateTransactionSize()
+            return transactionId
         } catch (e: Exception) {
             Log.e(TAG, e.message, e)
             throw e
@@ -70,21 +69,15 @@ class TransactionRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun deleteTransaction(id: Int) {
+    override suspend fun deleteTransaction(transaction: Transaction) {
         try {
-            transactionDao.deleteTransaction(id)
-            _transactions.value = _transactions.value.filter { it.id != id }
+            transactionDao.deleteTransaction(transaction.id)
+            _transactions.value = _transactions.value.filter { it.id != transaction.id }
             updateTransactionSize()
         } catch (e: Exception) {
             Log.e(TAG, e.message.toString())
             throw e
         }
-    }
-
-    override fun createFromMessage(message: SmsMessage, offer: Offer?): Transaction {
-        return Transaction(
-            id = 0, offer = offer, message = message.message, createdAt = System.currentTimeMillis()
-        )
     }
 
     private fun updateTransactionSize() {

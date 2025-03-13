@@ -3,7 +3,7 @@ package com.example.hybridconnect.domain.services
 import android.util.Log
 import com.example.hybridconnect.domain.exception.InvalidMessageFormatException
 import com.example.hybridconnect.domain.exception.RecommendationTimedOutException
-import com.example.hybridconnect.domain.repository.TransactionRepository
+import com.example.hybridconnect.domain.usecase.CreateTransactionUseCase
 import com.example.hybridconnect.domain.usecase.ExtractMessageDetailsUseCase
 import com.example.hybridconnect.domain.usecase.ForwardMessagesUseCase
 import com.example.hybridconnect.domain.usecase.GetOfferByPriceUseCase
@@ -19,7 +19,7 @@ class SmsProcessor @Inject constructor(
     private val validateMessageUseCase: ValidateMessageUseCase,
     private val extractMessageDetailsUseCase: ExtractMessageDetailsUseCase,
     private val getOfferByPriceUseCase: GetOfferByPriceUseCase,
-    private val transactionRepository: TransactionRepository,
+    private val createTransactionUseCase: CreateTransactionUseCase,
     private val forwardMessagesUseCase: ForwardMessagesUseCase,
 ) {
     fun processMessage(message: String, sender: String, simSlot: Int) {
@@ -28,8 +28,7 @@ class SmsProcessor @Inject constructor(
                 validateMessageUseCase(message, sender, simSlot)
                 val sms = extractMessageDetailsUseCase(message)
                 val offer = getOfferByPriceUseCase(sms.amount)
-                val transaction = transactionRepository.createFromMessage(sms, offer)
-                transactionRepository.createTransaction(transaction)
+                val transaction = createTransactionUseCase(sms, offer)
                 forwardMessagesUseCase(transaction)
             } catch (e: RecommendationTimedOutException) {
                 Log.e(TAG, e.message, e)

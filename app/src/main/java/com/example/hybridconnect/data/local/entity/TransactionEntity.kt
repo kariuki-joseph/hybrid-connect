@@ -5,6 +5,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.example.hybridconnect.domain.enums.TransactionStatus
 import java.util.UUID
 
 @Entity(
@@ -24,8 +25,12 @@ import java.util.UUID
 )
 data class TransactionEntity(
     @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
+    val id: Long = 0,
     val mpesaCode: String? = null,
+    @ColumnInfo(defaultValue = "0")
+    val amount: Int,
+    @ColumnInfo(defaultValue = "OK")
+    val status: TransactionStatus,
     val offerId: UUID?,
     val message: String = "",
     val createdAt: Long = System.currentTimeMillis(),

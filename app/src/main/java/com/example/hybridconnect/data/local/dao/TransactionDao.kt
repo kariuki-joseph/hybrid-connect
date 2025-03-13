@@ -8,7 +8,7 @@ import com.example.hybridconnect.data.local.entity.TransactionEntity
 @Dao
 interface TransactionDao {
     @Insert
-    suspend fun insert(transaction: TransactionEntity)
+    suspend fun insert(transaction: TransactionEntity): Long
 
     @Query("SELECT * FROM transactions WHERE id = :id")
     suspend fun getTransactionById(id: String): TransactionEntity?
@@ -26,6 +26,6 @@ interface TransactionDao {
     suspend fun getCurrentTransactionSize(): Int
 
     @Query("DELETE FROM transactions WHERE id = :id")
-    suspend fun deleteTransaction(id: Int)
+    suspend fun deleteTransaction(id: Long)
 
 }

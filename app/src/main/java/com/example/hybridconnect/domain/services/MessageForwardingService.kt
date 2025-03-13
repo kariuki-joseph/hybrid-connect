@@ -72,7 +72,6 @@ class MessageForwardingService : Service() {
             Log.d(TAG, "Processing transaction....")
             try {
                 sendWebsocketMessage(transaction)
-                transactionRepository.deleteTransaction(transaction.id)
             } catch (e: Exception) {
                 Log.e(TAG, "Transaction ${transaction.id} failed, retrying later.", e)
                 delay(2000)
@@ -100,7 +99,7 @@ class MessageForwardingService : Service() {
         val selectedApp = activeApps[nextIndex]
 
         Log.d(TAG, "Sending message to ${selectedApp.connectId}")
-        socketService.sendMessageToApp(selectedApp, transaction.message)
+        socketService.sendMessageToApp(selectedApp, transaction.mpesaMessage)
 
         // Update round-robin index per offer
         connectedAppRepository.incrementMessagesSent(selectedApp)

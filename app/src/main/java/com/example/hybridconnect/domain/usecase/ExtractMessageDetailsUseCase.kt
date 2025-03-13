@@ -32,10 +32,9 @@ class ExtractMessageDetailsUseCase @Inject constructor(
                 siteLinkMessageExtractor.extractDetails(message)
             }
 
-            SmsType.RECOMMENDATION_TIMEOUT -> {
-                Log.d(TAG, "Extracting as Recommendation Timeout message")
-                tillMessageExtractor.extractDetails(message)
-            }
+            SmsType.RECOMMENDATION_TIMEOUT -> throw Exception("No implementation to extract Recommendation timeout messages")
+
+            SmsType.AIRTIME_BALANCE -> throw Exception("No implementation to extract Airtime Balance messages")
         }
     }
 }

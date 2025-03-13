@@ -9,6 +9,7 @@ import com.example.hybridconnect.domain.services.SiteLinkMessageExtractor
 import com.example.hybridconnect.domain.services.SmsProcessor
 import com.example.hybridconnect.domain.services.TillMessageExtractor
 import com.example.hybridconnect.domain.services.interfaces.MessageExtractor
+import com.example.hybridconnect.domain.usecase.CreateTransactionUseCase
 import com.example.hybridconnect.domain.usecase.ExtractMessageDetailsUseCase
 import com.example.hybridconnect.domain.usecase.ForwardMessagesUseCase
 import com.example.hybridconnect.domain.usecase.GetAppStatusUseCase
@@ -82,14 +83,14 @@ object DomainModule {
         validateMessageUseCase: ValidateMessageUseCase,
         extractMessageDetailsUseCase: ExtractMessageDetailsUseCase,
         getOfferByPriceUseCase: GetOfferByPriceUseCase,
-        transactionRepository: TransactionRepository,
+        createTransactionUseCase: CreateTransactionUseCase,
         forwardMessagesUseCase: ForwardMessagesUseCase,
     ): SmsProcessor {
         return SmsProcessor(
             validateMessageUseCase,
             extractMessageDetailsUseCase,
             getOfferByPriceUseCase,
-            transactionRepository,
+            createTransactionUseCase,
             forwardMessagesUseCase
         )
     }
@@ -157,15 +158,23 @@ object DomainModule {
     @Singleton
     fun provideForwardMessagesUseCase(
         @ApplicationContext context: Context,
-        transactionRepository: TransactionRepository
+        transactionRepository: TransactionRepository,
     ): ForwardMessagesUseCase {
         return ForwardMessagesUseCase(context, transactionRepository)
     }
 
     @Provides
     fun provideReadMpesaMessagesUseCase(
-        @ApplicationContext context: Context
+        @ApplicationContext context: Context,
     ): ReadMpesaMessagesUseCase {
         return ReadMpesaMessagesUseCase(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCreateTransactionUseCase(
+        transactionRepository: TransactionRepository,
+    ): CreateTransactionUseCase {
+        return CreateTransactionUseCase(transactionRepository)
     }
 }

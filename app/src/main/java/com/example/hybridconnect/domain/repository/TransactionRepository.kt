@@ -11,15 +11,13 @@ interface TransactionRepository {
 
     val queueSize: StateFlow<Int>
 
-    suspend fun createTransaction(transaction: Transaction)
+    suspend fun createTransaction(transaction: Transaction): Long
 
     suspend fun getTransactions(): StateFlow<List<Transaction>>
 
     suspend fun getOldestTransaction(): Transaction?
 
-    suspend fun deleteTransaction(id: Int)
-
-    fun createFromMessage(message: SmsMessage, offer: Offer?): Transaction
+    suspend fun deleteTransaction(transaction: Transaction)
 
     suspend fun getTransactionByMpesaCode(mpesaCode: String): Transaction?
 }

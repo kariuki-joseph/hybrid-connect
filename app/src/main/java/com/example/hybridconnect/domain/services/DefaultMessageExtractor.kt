@@ -9,6 +9,7 @@ import java.util.Locale
 
 class DefaultMessageExtractor : MessageExtractor {
     override fun extractDetails(message: String): SmsMessage {
+        val mpesaCode = extractMpesaCode(message)
         val senderName = extractSenderName(message)
         val phoneNumber = extractPhoneNumber(message)
         val amount = extractAmount(message)
@@ -17,7 +18,12 @@ class DefaultMessageExtractor : MessageExtractor {
             "DefaultMessageExtractor",
             "Extracted details: $senderName, $phoneNumber, $amount, $time"
         )
-        return MpesaMessage(senderName, phoneNumber, amount, message, time = time)
+        return MpesaMessage(mpesaCode, senderName, phoneNumber, amount, message, time = time)
+    }
+
+    private fun extractMpesaCode(message: String): String {
+        val mpesaCode = extractWithRegex(message, """^(\S+)""", 1) ?: throw Exception("Invalid M-Pesa Code")
+        return mpesaCode
     }
 
     private fun extractSenderName(message: String): String {

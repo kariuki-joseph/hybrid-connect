@@ -1,9 +1,13 @@
 package com.example.hybridconnect.domain.model
 
+import com.example.hybridconnect.domain.enums.TransactionStatus
+
 data class Transaction(
-    val id: Int,
+    val id: Long,
     val mpesaCode: String? = null,
-    val message: String = "",
+    val amount: Int,
+    val mpesaMessage: String = "",
+    val status: TransactionStatus = TransactionStatus.OK,
     val createdAt: Long = System.currentTimeMillis(),
     val offer: Offer?,
     val isForwarded: Boolean = false,

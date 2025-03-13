@@ -10,7 +10,7 @@ private const val TAG = "GetTransactionUseCase"
 class GetTransactionUseCase @Inject constructor(
     private val transactionRepository: TransactionRepository,
 ) {
-    suspend operator fun invoke(transactionId: Int): Transaction {
+    suspend operator fun invoke(transactionId: Long): Transaction {
         try {
             transactionRepository.getTransactions().collect { list ->
                 list.filter { it.id == transactionId }

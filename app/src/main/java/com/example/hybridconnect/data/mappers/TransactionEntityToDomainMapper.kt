@@ -8,9 +8,11 @@ fun TransactionEntity.toDomain(offer: Offer?): Transaction {
     return Transaction(
         id = this.id,
         mpesaCode = this.mpesaCode,
-        offer = offer,
-        message = this.message,
+        amount = this.amount,
+        status = this.status,
+        mpesaMessage = this.message,
         createdAt = this.createdAt,
+        offer = offer,
         isForwarded = this.isForwarded
     )
 }

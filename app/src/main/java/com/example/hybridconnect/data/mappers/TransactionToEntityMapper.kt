@@ -7,9 +7,11 @@ fun Transaction.toEntity(): TransactionEntity {
     return TransactionEntity(
         id = this.id,
         mpesaCode = this.mpesaCode,
+        amount = this.amount,
+        message = this.mpesaMessage,
+        status = this.status,
         offerId = this.offer?.id,
-        message = this.message,
         createdAt = this.createdAt,
-        isForwarded = this.isForwarded
+        isForwarded = this.isForwarded,
     )
 }

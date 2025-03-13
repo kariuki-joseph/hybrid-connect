@@ -24,6 +24,7 @@ class SmsProcessor @Inject constructor(
 ) {
     fun processMessage(message: String, sender: String, simSlot: Int) {
         CoroutineScope(Dispatchers.IO).launch {
+            Log.d(TAG, "Processing message.. ${message.take(15)}")
             try {
                 validateMessageUseCase(message, sender, simSlot)
                 val sms = extractMessageDetailsUseCase(message)

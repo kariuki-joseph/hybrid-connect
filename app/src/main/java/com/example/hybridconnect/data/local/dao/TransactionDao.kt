@@ -23,8 +23,8 @@ interface TransactionDao {
     @Query("SELECT * FROM transactions ORDER BY createdAt ASC")
     suspend fun getTransactions(): List<TransactionEntity>
 
-    @Query("SELECT COUNT(*) FROM transactions")
-    suspend fun getCurrentTransactionSize(): Int
+    @Query("SELECT COUNT(*) FROM transactions WHERE isForwarded=0")
+    suspend fun getQueuedTransactionsCount(): Int
 
     @Update
     suspend fun updateTransaction(transaction: TransactionEntity)

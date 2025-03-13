@@ -29,14 +29,14 @@ class TransactionRepositoryImpl @Inject constructor(
     override val queueSize: StateFlow<Int> = _queueSize.asStateFlow()
 
     init {
-        updateTransactionSize()
+        updateQueueSize()
     }
 
     override suspend fun createTransaction(transaction: Transaction): Long {
         try {
             val transactionId = transactionDao.insert(transaction.toEntity())
             _transactions.value += transaction.copy(id = transactionId)
-            updateTransactionSize()
+            updateQueueSize()
             return transactionId
         } catch (e: Exception) {
             Log.e(TAG, e.message, e)
@@ -73,19 +73,18 @@ class TransactionRepositoryImpl @Inject constructor(
         try {
             transactionDao.deleteTransaction(transaction.id)
             _transactions.value = _transactions.value.filter { it.id != transaction.id }
-            updateTransactionSize()
+            updateQueueSize()
         } catch (e: Exception) {
             Log.e(TAG, e.message.toString())
             throw e
         }
     }
 
-    private fun updateTransactionSize() {
+    private fun updateQueueSize() {
         CoroutineScope(Dispatchers.IO).launch {
-            val size = transactionDao.getCurrentTransactionSize()
+            val size = transactionDao.getQueuedTransactionsCount()
             _queueSize.value = size
         }
-
     }
 
     override suspend fun getTransactionByMpesaCode(mpesaCode: String): Transaction? {

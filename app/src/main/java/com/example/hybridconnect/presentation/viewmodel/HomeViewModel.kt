@@ -1,9 +1,6 @@
 package com.example.hybridconnect.presentation.viewmodel
 
 import android.content.Context
-import android.content.Intent
-import android.util.Log
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.hybridconnect.domain.enums.AppState
@@ -14,11 +11,8 @@ import com.example.hybridconnect.domain.repository.AuthRepository
 import com.example.hybridconnect.domain.repository.ConnectedAppRepository
 import com.example.hybridconnect.domain.repository.SettingsRepository
 import com.example.hybridconnect.domain.repository.TransactionRepository
-import com.example.hybridconnect.domain.services.SmsProcessingService
-import com.example.hybridconnect.domain.services.SmsProcessor
 import com.example.hybridconnect.domain.services.SocketService
 import com.example.hybridconnect.domain.services.interfaces.AppControl
-import com.example.hybridconnect.domain.usecase.ForwardMessagesUseCase
 import com.example.hybridconnect.domain.usecase.LogoutUserUseCase
 import com.example.hybridconnect.domain.usecase.RetryUnforwardedTransactionsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -88,7 +82,6 @@ class HomeViewModel @Inject constructor(
         createGreetings()
         startGreetingTimer()
         loadConnectedOffersCount()
-        startOnlineStatusCallback()
     }
 
     private fun loadAgent() {
@@ -109,10 +102,10 @@ class HomeViewModel @Inject constructor(
 
                     apps.any { app ->
                         if (app.isOnline) {
-                            forwardMessagesUseCase.startMessageForwardingWorker()
+                            retryUnforwardedTransactionsUseCase()
                             true
                         } else {
-                            forwardMessagesUseCase.cancelMessageForwardingWork()
+                            transactionRepository.transactionQueue.clear()
                             false
                         }
                     }
@@ -213,27 +206,5 @@ class HomeViewModel @Inject constructor(
 
     fun resetSnackbarMessage() {
         _snackbarMessage.value = null
-    }
-
-    private fun startService() {
-        val serviceIntent = Intent(context, SmsProcessingService::class.java)
-        ContextCompat.startForegroundService(context, serviceIntent)
-    }
-
-    private fun stopService() {
-        val serviceIntent = Intent(context, SmsProcessingService::class.java)
-        context.stopService(serviceIntent)
-    }
-
-    private fun startOnlineStatusCallback() {
-        viewModelScope.launch {
-            isConnected.collect { connected ->
-                if (connected) {
-                    forwardMessagesUseCase.startMessageForwardingWorker()
-                } else {
-                    forwardMessagesUseCase.cancelMessageForwardingWork()
-                }
-            }
-        }
     }
 }

@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
 import com.example.hybridconnect.data.local.entity.TransactionEntity
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TransactionDao {
@@ -17,8 +18,8 @@ interface TransactionDao {
     @Query("SELECT * FROM transactions WHERE mpesaCode = :mpesaCode LIMIT 1")
     suspend fun getTransactionByMpesaCode(mpesaCode: String): TransactionEntity?
 
-    @Query("SELECT * FROM transactions WHERE isForwarded=0 ORDER BY createdAt ASC LIMIT 1")
-    suspend fun getOldestTransaction(): TransactionEntity?
+    @Query("SELECT * FROM transactions WHERE isForwarded=0 ORDER BY createdAt ASC")
+    fun getUnForwardedTransactionsFlow(): Flow<List<TransactionEntity>>
 
     @Query("SELECT * FROM transactions ORDER BY createdAt ASC")
     suspend fun getTransactions(): List<TransactionEntity>

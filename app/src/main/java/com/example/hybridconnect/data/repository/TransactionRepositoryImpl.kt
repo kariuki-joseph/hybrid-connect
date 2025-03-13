@@ -9,9 +9,11 @@ import com.example.hybridconnect.domain.repository.OfferRepository
 import com.example.hybridconnect.domain.repository.TransactionRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import java.util.concurrent.PriorityBlockingQueue
 import javax.inject.Inject
@@ -25,18 +27,14 @@ class TransactionRepositoryImpl @Inject constructor(
     private val _transactions = MutableStateFlow<List<Transaction>>(emptyList())
     override val transactionQueue = PriorityBlockingQueue<Transaction>()
 
-    private val _queueSize = MutableStateFlow(0)
-    override val queueSize: StateFlow<Int> = _queueSize.asStateFlow()
-
     init {
-        updateQueueSize()
+        collectUnforwardedTransactions()
     }
 
     override suspend fun createTransaction(transaction: Transaction): Long {
         try {
             val transactionId = transactionDao.insert(transaction.toEntity())
             _transactions.value += transaction.copy(id = transactionId)
-            updateQueueSize()
             return transactionId
         } catch (e: Exception) {
             Log.e(TAG, e.message, e)
@@ -58,32 +56,21 @@ class TransactionRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getOldestTransaction(): Transaction? {
-        try {
-            val transaction = transactionDao.getOldestTransaction()
-            val offer = transaction?.offerId?.let { offerRepository.getOfferById(it) }
-            return transaction?.toDomain(offer)
-        } catch (e: Exception) {
-            Log.e(TAG, e.message, e)
-            throw e
+    override val transactionQueueFlow: Flow<List<Transaction>>
+        get() = transactionDao.getUnForwardedTransactionsFlow().map { transactionEntities ->
+            transactionEntities.map { entity ->
+                val offer = entity.offerId?.let { offerRepository.getOfferById(it) }
+                entity.toDomain(offer)
+            }
         }
-    }
 
     override suspend fun deleteTransaction(transaction: Transaction) {
         try {
             transactionDao.deleteTransaction(transaction.id)
             _transactions.value = _transactions.value.filter { it.id != transaction.id }
-            updateQueueSize()
         } catch (e: Exception) {
             Log.e(TAG, e.message.toString())
             throw e
-        }
-    }
-
-    private fun updateQueueSize() {
-        CoroutineScope(Dispatchers.IO).launch {
-            val size = transactionDao.getQueuedTransactionsCount()
-            _queueSize.value = size
         }
     }
 
@@ -102,6 +89,20 @@ class TransactionRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             Log.e(TAG, "updateTransaction", e)
             throw e
+        }
+    }
+
+    private fun collectUnforwardedTransactions() {
+        CoroutineScope(Dispatchers.IO).launch {
+            transactionDao.getUnForwardedTransactionsFlow().collect { transactionEntities ->
+                val transactions = transactionEntities.map { entity ->
+                    val offer = entity.offerId?.let { offerRepository.getOfferById(it) }
+                    entity.toDomain(offer)
+                }
+                transactionQueue.clear()
+                transactionQueue.addAll(transactions)
+                _transactions.value = transactions
+            }
         }
     }
 

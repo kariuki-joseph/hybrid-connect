@@ -63,7 +63,7 @@ class MessageForwardingService : Service() {
     private suspend fun processTransactions() {
         while (true) {
             Log.d(TAG, "Looping...")
-            val transaction = transactionRepository.getOldestTransaction() ?: break
+            val transaction = transactionRepository.transactionQueue.poll() ?: break
             val apps = connectedAppRepository.getConnectedApps().first()
             val activeApps = apps.filter { it.isOnline }
 

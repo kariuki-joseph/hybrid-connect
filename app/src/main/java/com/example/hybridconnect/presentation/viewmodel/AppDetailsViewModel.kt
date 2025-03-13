@@ -4,14 +4,17 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.hybridconnect.domain.model.ConnectedApp
 import com.example.hybridconnect.domain.model.Offer
+import com.example.hybridconnect.domain.model.Transaction
 import com.example.hybridconnect.domain.repository.ConnectedAppRepository
 import com.example.hybridconnect.domain.repository.OfferRepository
 import com.example.hybridconnect.domain.repository.TransactionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
@@ -41,7 +44,8 @@ class AppDetailsViewModel @Inject constructor(
     private val _isDeletingApp = MutableStateFlow(false)
     val isDeletingApp: StateFlow<Boolean> = _isDeletingApp.asStateFlow()
 
-    val queueSize: StateFlow<Int> = transactionRepository.queueSize
+    val transactionQueue: StateFlow<List<Transaction>> = transactionRepository.transactionQueueFlow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), emptyList())
 
     fun loadConnectedApp(connectId: String) {
         viewModelScope.launch {

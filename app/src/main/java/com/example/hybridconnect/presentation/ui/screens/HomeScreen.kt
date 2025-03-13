@@ -65,7 +65,7 @@ fun HomeScreen(
     val isAppActive by viewModel.isAppActive.collectAsState()
     val isConnected by viewModel.isConnected.collectAsState()
     val connectedApps by viewModel.connectedApps.collectAsState()
-    val queueSize by viewModel.queueSize.collectAsState()
+    val transactionQueue by viewModel.transactionQueue.collectAsState()
     val connectedOffersCount by viewModel.connectedOffersCount.collectAsState()
     var showStopAppWarningDialog by remember { mutableStateOf(false) }
     val logoutSuccess by viewModel.logoutSuccess.collectAsState()
@@ -162,7 +162,7 @@ fun HomeScreen(
                         val offersCount = connectedOffersCount[app.connectId] ?: 0
                         ConnectedAppComponent(
                             connectedApp = app,
-                            queueSize = queueSize,
+                            queueSize = transactionQueue.size,
                             connectedOffersCount = offersCount,
                             onClick = {
                                 navController.navigate(

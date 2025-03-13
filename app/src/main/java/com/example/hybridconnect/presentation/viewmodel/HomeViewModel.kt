@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.hybridconnect.domain.enums.AppSetting
 import com.example.hybridconnect.domain.model.Agent
 import com.example.hybridconnect.domain.model.ConnectedApp
+import com.example.hybridconnect.domain.model.Transaction
 import com.example.hybridconnect.domain.repository.AuthRepository
 import com.example.hybridconnect.domain.repository.ConnectedAppRepository
 import com.example.hybridconnect.domain.repository.SettingsRepository
@@ -67,12 +68,14 @@ class HomeViewModel @Inject constructor(
 
     val isConnected: StateFlow<Boolean> = socketService.isConnected
 
-    val queueSize: StateFlow<Int> = transactionRepository.queueSize
+    val transactionQueue: StateFlow<List<Transaction>> = transactionRepository.transactionQueueFlow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), emptyList())
 
     private val _connectedOffersCount = MutableStateFlow<Map<String, Int>>(emptyMap())
     val connectedOffersCount: StateFlow<Map<String, Int>> = _connectedOffersCount.asStateFlow()
 
     private var count = 0;
+
     init {
         loadAgent()
         loadConnectedApps()
@@ -194,7 +197,8 @@ class HomeViewModel @Inject constructor(
 
     fun testButtonClicked(amount: String = "5") {
         val transactionCode = "TCB49LSF1K${++count}"
-        val message = "$transactionCode Confirmed.You have received Ksh$amount.00 from Joseph  Kariuki 0114662464 on 11/3/25 at 1:21 PM  New M-PESA balance is Ksh9.73. Earn interest daily on Ziidi MMF,Dial *334#"
+        val message =
+            "$transactionCode Confirmed.You have received Ksh$amount.00 from Joseph  Kariuki 0114662464 on 11/3/25 at 1:21 PM  New M-PESA balance is Ksh9.73. Earn interest daily on Ziidi MMF,Dial *334#"
         sendMessage(message)
     }
 }

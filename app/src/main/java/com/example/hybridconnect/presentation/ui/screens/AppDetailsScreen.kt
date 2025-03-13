@@ -69,7 +69,7 @@ fun AppDetailsScreen(
     val connectedOffers by viewModel.connectedOffers.collectAsState()
     val snackbarMessage by viewModel.snackbarMessage.collectAsState()
     val isDeletingApp by viewModel.isDeletingApp.collectAsState()
-    val queueSize by viewModel.queueSize.collectAsState()
+    val transactionQueue by viewModel.transactionQueue.collectAsState()
 
     var showConfirmDeleteAppDialog by remember { mutableStateOf(false) }
 
@@ -107,7 +107,7 @@ fun AppDetailsScreen(
             connectedApp?.let { app ->
                 AppDetailsScreenContent(
                     connectedApp = app,
-                    queueSize = queueSize,
+                    queueSize = transactionQueue.size,
                     availableOffers = availableOffers,
                     connectedOffers = connectedOffers,
                     onOfferSelectionChange = { offerId, isSelected ->

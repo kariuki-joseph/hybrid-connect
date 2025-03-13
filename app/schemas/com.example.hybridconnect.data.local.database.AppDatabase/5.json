@@ -1,8 +1,8 @@
 {
   "formatVersion": 1,
   "database": {
-    "version": 4,
-    "identityHash": "888ecc1552bb097a42f726e9ddc9a3c0",
+    "version": 5,
+    "identityHash": "07a98f69d11dacc447148bff18a06552",
     "entities": [
       {
         "tableName": "preferences",
@@ -149,13 +149,19 @@
       },
       {
         "tableName": "transactions",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `offerId` BLOB, `message` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `forwarded` INTEGER NOT NULL DEFAULT false, FOREIGN KEY(`offerId`) REFERENCES `offers`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `mpesaCode` TEXT, `offerId` BLOB, `message` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `isForwarded` INTEGER NOT NULL DEFAULT false, FOREIGN KEY(`offerId`) REFERENCES `offers`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
         "fields": [
           {
             "fieldPath": "id",
             "columnName": "id",
             "affinity": "INTEGER",
             "notNull": true
+          },
+          {
+            "fieldPath": "mpesaCode",
+            "columnName": "mpesaCode",
+            "affinity": "TEXT",
+            "notNull": false
           },
           {
             "fieldPath": "offerId",
@@ -176,8 +182,8 @@
             "notNull": true
           },
           {
-            "fieldPath": "forwarded",
-            "columnName": "forwarded",
+            "fieldPath": "isForwarded",
+            "columnName": "isForwarded",
             "affinity": "INTEGER",
             "notNull": true,
             "defaultValue": "false"
@@ -198,6 +204,15 @@
             ],
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_transactions_offerId` ON `${TABLE_NAME}` (`offerId`)"
+          },
+          {
+            "name": "index_transactions_mpesaCode",
+            "unique": true,
+            "columnNames": [
+              "mpesaCode"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_transactions_mpesaCode` ON `${TABLE_NAME}` (`mpesaCode`)"
           }
         ],
         "foreignKeys": [
@@ -340,7 +355,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '888ecc1552bb097a42f726e9ddc9a3c0')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '07a98f69d11dacc447148bff18a06552')"
     ]
   }
 }

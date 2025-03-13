@@ -6,8 +6,10 @@ import com.example.hybridconnect.domain.model.Transaction
 fun Transaction.toEntity(): TransactionEntity {
     return TransactionEntity(
         id = this.id,
+        mpesaCode = this.mpesaCode,
         offerId = this.offer?.id,
         message = this.message,
-        createdAt = this.createdAt
+        createdAt = this.createdAt,
+        isForwarded = this.isForwarded
     )
 }

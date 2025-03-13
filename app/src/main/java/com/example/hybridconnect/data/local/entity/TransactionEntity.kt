@@ -18,15 +18,17 @@ import java.util.UUID
         )
     ],
     indices = [
-        Index(value = ["offerId"])
+        Index(value = ["offerId"]),
+        Index(value = ["mpesaCode"], unique = true)
     ]
 )
 data class TransactionEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
+    val mpesaCode: String? = null,
     val offerId: UUID?,
     val message: String = "",
     val createdAt: Long = System.currentTimeMillis(),
     @ColumnInfo(defaultValue = "false")
-    val forwarded: Boolean = false,
+    val isForwarded: Boolean = false,
 )

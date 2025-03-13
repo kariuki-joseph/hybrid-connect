@@ -163,7 +163,10 @@ object DomainModule {
     }
 
     @Provides
-    fun provideReadMpesaMessagesUseCase(@ApplicationContext context: Context): ReadMpesaMessagesUseCase {
-        return ReadMpesaMessagesUseCase(context)
+    fun provideReadMpesaMessagesUseCase(
+        @ApplicationContext context: Context,
+        settingsRepository: SettingsRepository
+    ): ReadMpesaMessagesUseCase {
+        return ReadMpesaMessagesUseCase(context, settingsRepository)
     }
 }

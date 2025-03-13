@@ -20,4 +20,6 @@ interface TransactionRepository {
     suspend fun deleteTransaction(id: Int)
 
     fun createFromMessage(message: SmsMessage, offer: Offer?): Transaction
+
+    suspend fun getTransactionByMpesaCode(mpesaCode: String): Transaction?
 }

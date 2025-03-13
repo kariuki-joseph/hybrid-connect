@@ -9,6 +9,7 @@ import com.example.hybridconnect.data.local.dao.ConnectedAppDao
 import com.example.hybridconnect.data.local.dao.OfferDao
 import com.example.hybridconnect.data.local.dao.PrefsDao
 import com.example.hybridconnect.data.local.dao.TransactionDao
+import com.example.hybridconnect.data.local.database.migrations.Migration_4_5
 import com.example.hybridconnect.data.local.entity.AgentEntity
 import com.example.hybridconnect.data.local.entity.AppOfferEntity
 import com.example.hybridconnect.data.local.entity.ConnectedAppEntity
@@ -25,12 +26,17 @@ import com.example.hybridconnect.data.local.entity.TransactionEntity
         ConnectedAppEntity::class,
         AppOfferEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 1, to = 2), // Offers
         AutoMigration(from = 2, to = 3), // Connected App Offers
-        AutoMigration(from = 3, to = 4)  //     Adding 'forwarded' column in transactions
+        AutoMigration(from = 3, to = 4),  //     Adding 'isForwarded' column in transactions
+        AutoMigration(
+            from = 4,
+            to = 5,
+            spec = Migration_4_5::class
+        )  //     Adding 'mpesaCode' column in transactions
     ]
 )
 abstract class AppDatabase : RoomDatabase() {

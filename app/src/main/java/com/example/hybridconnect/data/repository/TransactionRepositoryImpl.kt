@@ -95,4 +95,11 @@ class TransactionRepositoryImpl @Inject constructor(
 
     }
 
+    override suspend fun getTransactionByMpesaCode(mpesaCode: String): Transaction? {
+        val transaction = transactionDao.getTransactionByMpesaCode(mpesaCode) ?: return null
+        val offer = transaction.offerId?.let { offerRepository.getOfferById(it) }
+        return transaction.toDomain(offer)
+    }
+
+
 }

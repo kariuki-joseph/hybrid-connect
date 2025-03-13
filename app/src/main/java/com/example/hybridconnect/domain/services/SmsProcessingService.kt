@@ -9,6 +9,7 @@ import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.hybridconnect.R
+import com.example.hybridconnect.domain.usecase.ReadMpesaMessagesUseCase
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -25,6 +26,9 @@ class SmsProcessingService : Service() {
 
     @Inject
     lateinit var smsProcessor: SmsProcessor
+
+    @Inject
+    lateinit var readMpesaMessagesUseCase: ReadMpesaMessagesUseCase
 
     private val serviceScope = CoroutineScope(Dispatchers.IO)
 
@@ -43,6 +47,12 @@ class SmsProcessingService : Service() {
             serviceScope.launch {
                 Log.d(TAG, "Processing sms request inside a service, $message , $sender, $simSlot")
                 smsProcessor.processMessage(message, sender, simSlot)
+
+                // dry-run M-Pesa messages to make sure none is skipped
+                readMpesaMessagesUseCase().forEach { msg ->
+                    smsProcessor.processMessage(msg.message, msg.sender, msg.simSlot)
+                }
+
                 showNotification("Waiting", "Waiting for new sms")
             }
         }

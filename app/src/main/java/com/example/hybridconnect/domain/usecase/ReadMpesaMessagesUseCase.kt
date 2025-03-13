@@ -6,7 +6,7 @@ import com.example.hybridconnect.domain.model.RawSmsMessage
 
 class ReadMpesaMessagesUseCase(
     private val context: Context,
-    private val subscriptionIdFetcherUseCase: SubscriptionIdFetcherUseCase
+    private val subscriptionIdFetcherUseCase: SubscriptionIdFetcherUseCase,
 ) {
 
     operator fun invoke(bufferSize: Int = 10): List<RawSmsMessage> {
@@ -22,7 +22,7 @@ class ReadMpesaMessagesUseCase(
             projection,
             selection,
             selectionArgs,
-            "date DESC"
+            "date DESC LIMIT $bufferSize"
         )
 
         cursor?.use {
@@ -31,22 +31,22 @@ class ReadMpesaMessagesUseCase(
             val dateIndex = it.getColumnIndex("date")
             val simIndex = it.getColumnIndex("sim_id")
             if (bodyIndex != -1 && senderIndex != -1 && dateIndex != -1) {
-                var count = 0
-                while (it.moveToNext() && count < bufferSize) {
-                    val body = it.getString(bodyIndex)
-                    val sender = it.getString(senderIndex)
-                    val timeStamp = it.getLong(dateIndex)
+                while (cursor.moveToNext()) {
+                    val body = cursor.getString(bodyIndex)
+                    val sender = cursor.getString(senderIndex)
+                    val timeStamp = cursor.getLong(dateIndex)
                     val simSubId = cursor.getInt(simIndex)
-                    val simSlot = subscriptionIdFetcherUseCase.getSlotFromSubId(simSubId).takeIf { slot -> slot != -1 }
+                    val simSlot = subscriptionIdFetcherUseCase.getSlotFromSubId(simSubId)
+                        .takeIf { slot -> slot != -1 }
 
-                    val rawSms = RawSmsMessage(
-                        message = body,
-                        sender = sender,
-                        simSlot = simSlot,
-                        timestamp = timeStamp,
+                    messagesList.add(
+                        RawSmsMessage(
+                            message = body,
+                            sender = sender,
+                            simSlot = simSlot,
+                            timestamp = timeStamp
+                        )
                     )
-                    messagesList.add(rawSms)
-                    count++
                 }
             }
         }

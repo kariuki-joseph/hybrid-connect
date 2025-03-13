@@ -51,7 +51,6 @@ class MessageForwardingService : Service() {
 
 
     override fun onCreate() {
-        Log.d(TAG, "onCreate")
         super.onCreate()
         createNotificationChannel()
         startForeground(1, createNotification("Starting", "Initializing Service"))
@@ -59,7 +58,6 @@ class MessageForwardingService : Service() {
 
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d(TAG, "onStartCommand")
         serviceScope.launch {
             processTransactions()
         }
@@ -82,7 +80,6 @@ class MessageForwardingService : Service() {
                 continue
             }
 
-            Log.d(TAG, "Processing transaction....")
             try {
                 sendWebsocketMessage(transaction)
                 updateTransactionUseCase(transaction.copy(isForwarded = true))
@@ -95,7 +92,6 @@ class MessageForwardingService : Service() {
             }
         }
 
-        Log.d(TAG, "All transactions processed successfully.")
         stopSelf()
     }
 

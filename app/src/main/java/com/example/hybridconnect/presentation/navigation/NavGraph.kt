@@ -16,6 +16,7 @@ import com.example.hybridconnect.presentation.ui.screens.AddOfferScreen
 import com.example.hybridconnect.presentation.ui.screens.AppDetailsScreen
 import com.example.hybridconnect.presentation.ui.screens.EditOfferScreen
 import com.example.hybridconnect.presentation.ui.screens.EditProfileScreen
+import com.example.hybridconnect.presentation.ui.screens.ForwardMessagesScreen
 import com.example.hybridconnect.presentation.ui.screens.HomeScreen
 import com.example.hybridconnect.presentation.ui.screens.LoginScreen
 import com.example.hybridconnect.presentation.ui.screens.OffersScreen
@@ -149,6 +150,9 @@ fun NavGraph(
                 navController = navController,
                 passedEmail = email
             )
+        }
+        composable(Route.ForwardMessages.name) {
+            ForwardMessagesScreen(navController = navController)
         }
     }
 }

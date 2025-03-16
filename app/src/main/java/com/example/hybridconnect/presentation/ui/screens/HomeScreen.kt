@@ -54,7 +54,6 @@ import com.example.hybridconnect.presentation.navigation.Route
 import com.example.hybridconnect.presentation.ui.components.ConnectedAppComponent
 import com.example.hybridconnect.presentation.ui.components.CustomButton
 import com.example.hybridconnect.presentation.viewmodel.HomeViewModel
-import com.example.hybridconnect.presentation.viewmodel.SmsViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -63,12 +62,10 @@ fun HomeScreen(
     navController: NavHostController,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel(),
-    smsViewModel: SmsViewModel = hiltViewModel(),
 ) {
     val scope = rememberCoroutineScope()
     val agentFirstName by viewModel.agentFirstName.collectAsState()
     val greetings by viewModel.greetings.collectAsState()
-    val isAppActive by viewModel.isAppActive.collectAsState()
     val appState by viewModel.appState.collectAsState()
     val isConnected by viewModel.isConnected.collectAsState()
     val connectedApps by viewModel.connectedApps.collectAsState()
@@ -77,7 +74,6 @@ fun HomeScreen(
     var showStopAppWarningDialog by remember { mutableStateOf(false) }
     val logoutSuccess by viewModel.logoutSuccess.collectAsState()
     val snackbarMessage by viewModel.snackbarMessage.collectAsState()
-    val context = LocalContext.current
 
     LaunchedEffect(logoutSuccess) {
         if (logoutSuccess) {
@@ -95,10 +91,6 @@ fun HomeScreen(
             SnackbarManager.showMessage(scope, it)
             viewModel.resetSnackbarMessage()
         }
-    }
-
-    LaunchedEffect(true) {
-        smsViewModel.readMPEMASMS(context = context)
     }
 
     Box(
@@ -138,7 +130,7 @@ fun HomeScreen(
                         ) {
                             Icon(
                                 imageVector = if (isConnected) Icons.Default.Wifi else Icons.Default.WifiOff,
-                                contentDescription = if (isAppActive) "Wifi Off" else "Wifi On",
+                                contentDescription = if (isConnected) "Wifi On" else "Wifi Off",
                                 tint = if (isConnected) Color.Green else MaterialTheme.colorScheme.error
                             )
                         }
@@ -183,14 +175,6 @@ fun HomeScreen(
                 }
             }
         }
-
-//        TestSendComponent(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .align(Alignment.BottomStart)
-//                .padding(start = 16.dp, bottom = 32.dp),
-//            onTestButtonClicked = { viewModel.testButtonClicked(it) }
-//        )
 
         Column(
             modifier = Modifier

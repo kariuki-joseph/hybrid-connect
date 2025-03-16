@@ -18,4 +18,5 @@ sealed class Route(val name: String, val title: String) {
     data object ResetPassword: Route("reset-password/{email}", "Reset Password")
     data object AddConnectedApp: Route("hybrid-connect/new", "Add Connected App")
     data object AppDetails: Route("hybrid-connect/{connectId}", "App Details")
+    data object ForwardMessages: Route("forward-messages", "Forward Messages")
 }

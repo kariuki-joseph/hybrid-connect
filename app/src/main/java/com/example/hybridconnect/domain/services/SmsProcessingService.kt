@@ -57,7 +57,7 @@ class SmsProcessingService : Service() {
             }
         }
 
-        return START_STICKY
+        return START_REDELIVER_INTENT
     }
 
     private fun showNotification(title: String, content: String) {

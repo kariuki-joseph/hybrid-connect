@@ -14,7 +14,6 @@ import com.example.hybridconnect.domain.services.interfaces.MessageExtractor
 import com.example.hybridconnect.domain.usecase.CreateTransactionUseCase
 import com.example.hybridconnect.domain.usecase.ExtractMessageDetailsUseCase
 import com.example.hybridconnect.domain.usecase.ForwardTransactionUseCase
-import com.example.hybridconnect.domain.usecase.GetAppStatusUseCase
 import com.example.hybridconnect.domain.usecase.GetOfferByPriceUseCase
 import com.example.hybridconnect.domain.usecase.LoginUserUseCase
 import com.example.hybridconnect.domain.usecase.LogoutUserUseCase
@@ -46,12 +45,6 @@ object DomainModule {
         settingsRepository: SettingsRepository,
     ): SubscriptionIdFetcherUseCase {
         return SubscriptionIdFetcherUseCase(context, settingsRepository)
-    }
-
-    @Provides
-    @Singleton
-    fun provideGetAppStatusUseCase(settingsRepository: SettingsRepository): GetAppStatusUseCase {
-        return GetAppStatusUseCase(settingsRepository)
     }
 
     @Provides
@@ -160,7 +153,7 @@ object DomainModule {
 
     @Provides
     @Singleton
-    fun provideForwardMessagesUseCase(
+    fun provideForwardTransactionUseCase(
         @ApplicationContext context: Context,
         appControl: AppControl,
         transactionRepository: TransactionRepository,

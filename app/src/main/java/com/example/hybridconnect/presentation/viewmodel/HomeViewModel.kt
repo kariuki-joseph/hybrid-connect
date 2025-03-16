@@ -49,8 +49,6 @@ class HomeViewModel @Inject constructor(
     val connectedApps: StateFlow<List<ConnectedApp>> = connectedAppRepository.getConnectedApps()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), emptyList())
 
-    val isAppActive: StateFlow<Boolean> = settingsRepository.isAppActive
-
     private val agent: StateFlow<Agent?> = authRepository.agent
 
     val agentFirstName: StateFlow<String?> = agent

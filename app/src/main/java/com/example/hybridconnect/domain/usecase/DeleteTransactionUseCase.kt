@@ -1,17 +1,12 @@
 package com.example.hybridconnect.domain.usecase
 
 import android.util.Log
-import com.example.hybridconnect.domain.enums.TransactionStatus
-import com.example.hybridconnect.domain.repository.TransactionRepository
 import java.util.UUID
 import javax.inject.Inject
 
 private const val TAG = "DeleteTransactionUseCase"
 
-class DeleteTransactionUseCase @Inject constructor(
-    private val transactionRepository: TransactionRepository,
-    private val decrementCustomerBalanceUseCase: DecrementCustomerBalanceUseCase,
-) {
+class DeleteTransactionUseCase @Inject constructor() {
     suspend operator fun invoke(transactionId: UUID) {
         try {
 

@@ -53,6 +53,7 @@ fun DrawerScaffoldScreen(
     val items = listOf(
         DrawerItem.Home,
         DrawerItem.Offers,
+        DrawerItem.ForwardMessages,
         DrawerItem.Settings,
     )
 
@@ -199,6 +200,10 @@ fun handleDrawerItemClick(
 
         is DrawerItem.Settings -> {
             navController.navigate(Route.Settings.name)
+        }
+        
+        is DrawerItem.ForwardMessages -> {
+            navController.navigate(Route.ForwardMessages.name)
         }
 
 

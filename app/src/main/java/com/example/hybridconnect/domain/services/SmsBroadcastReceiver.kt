@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.telephony.SmsMessage
 import android.telephony.SubscriptionManager
 import com.example.hybridconnect.domain.repository.SettingsRepository
+import com.example.hybridconnect.domain.usecase.SubscriptionIdFetcherUseCase
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -15,6 +16,9 @@ import javax.inject.Inject
 class SmsBroadcastReceiver : BroadcastReceiver() {
     @Inject
     lateinit var settingsRepository: SettingsRepository
+
+    @Inject
+    lateinit var subscriptionIdFetcherUseCase: SubscriptionIdFetcherUseCase
 
     private val messageParts = mutableMapOf<String, StringBuilder>()
 
@@ -30,7 +34,7 @@ class SmsBroadcastReceiver : BroadcastReceiver() {
             val pdus = bundle["pdus"] as? Array<*>
             if (pdus != null) {
                 val subscriptionId = bundle.getInt("subscription", -1)
-                val simSlot = getSimSlotForSubscription(context, subscriptionId)
+                val simSlot = subscriptionIdFetcherUseCase.getSlotFromSubId(subscriptionId)
 
                 // Extract sender information from the first PDU
                 val smsMessage = SmsMessage.createFromPdu(pdus[0] as ByteArray)
@@ -68,16 +72,5 @@ class SmsBroadcastReceiver : BroadcastReceiver() {
                 }
             }
         }
-    }
-
-    @SuppressLint("MissingPermission")
-    private fun getSimSlotForSubscription(context: Context, subscriptionId: Int): Int {
-        if (subscriptionId == -1) {
-            return -1 // Unknown sim slot
-        }
-        val subscriptionManager =
-            context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as SubscriptionManager
-        val subscriptionInfo = subscriptionManager.getActiveSubscriptionInfo(subscriptionId)
-        return subscriptionInfo?.simSlotIndex ?: -1
     }
 }

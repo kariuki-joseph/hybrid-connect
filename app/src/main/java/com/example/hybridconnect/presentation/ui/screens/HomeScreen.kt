@@ -54,7 +54,6 @@ import com.example.hybridconnect.presentation.navigation.Route
 import com.example.hybridconnect.presentation.ui.components.ConnectedAppComponent
 import com.example.hybridconnect.presentation.ui.components.CustomButton
 import com.example.hybridconnect.presentation.viewmodel.HomeViewModel
-import com.example.hybridconnect.presentation.viewmodel.SmsViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -63,7 +62,6 @@ fun HomeScreen(
     navController: NavHostController,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel(),
-    smsViewModel: SmsViewModel = hiltViewModel(),
 ) {
     val scope = rememberCoroutineScope()
     val agentFirstName by viewModel.agentFirstName.collectAsState()
@@ -77,7 +75,6 @@ fun HomeScreen(
     var showStopAppWarningDialog by remember { mutableStateOf(false) }
     val logoutSuccess by viewModel.logoutSuccess.collectAsState()
     val snackbarMessage by viewModel.snackbarMessage.collectAsState()
-    val context = LocalContext.current
 
     LaunchedEffect(logoutSuccess) {
         if (logoutSuccess) {
@@ -95,10 +92,6 @@ fun HomeScreen(
             SnackbarManager.showMessage(scope, it)
             viewModel.resetSnackbarMessage()
         }
-    }
-
-    LaunchedEffect(true) {
-        smsViewModel.readMPEMASMS(context = context)
     }
 
     Box(

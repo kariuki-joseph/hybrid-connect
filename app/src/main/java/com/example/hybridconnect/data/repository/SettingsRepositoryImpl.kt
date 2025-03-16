@@ -5,14 +5,12 @@ import com.example.hybridconnect.data.local.dao.PrefsDao
 import com.example.hybridconnect.data.local.entity.PrefEntity
 import com.example.hybridconnect.data.local.preferences.SharedPrefsManager
 import com.example.hybridconnect.domain.enums.AppSetting
+import com.example.hybridconnect.domain.enums.AppState
 import com.example.hybridconnect.domain.enums.SimCard
 import com.example.hybridconnect.domain.repository.SettingsRepository
 import com.example.hybridconnect.domain.utils.Constants
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -22,9 +20,6 @@ class SettingsRepositoryImpl @Inject constructor(
     private val sharedPrefsManager: SharedPrefsManager,
     private val prefsDao: PrefsDao,
 ) : SettingsRepository {
-    private val _isAppActive = MutableStateFlow(false)
-    override val isAppActive: StateFlow<Boolean> = _isAppActive.asStateFlow()
-
     override suspend fun saveSetting(setting: AppSetting, value: String) {
         val pref = PrefEntity(setting.name, value)
         prefsDao.set(pref)
@@ -38,10 +33,6 @@ class SettingsRepositoryImpl @Inject constructor(
     override suspend fun deleteSetting(setting: AppSetting) {
         val pref = prefsDao.getSetting(setting.name)
         pref?.let { prefsDao.deleteSetting(it) }
-    }
-
-    init {
-        getAppActiveStatus()
     }
 
     override suspend fun setOnBoardingCompleted() {
@@ -76,16 +67,6 @@ class SettingsRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun setAppActive(isActive: Boolean) {
-        val activeStatus = PrefEntity(Constants.IS_APP_ACTIVE, isActive.toString())
-        prefsDao.set(activeStatus)
-        _isAppActive.value = isActive
-    }
-
-    override fun isAppActive(): Boolean {
-        return isAppActive.value
-    }
-
     override fun getAccessToken(): String {
         return sharedPrefsManager.get(Constants.KEY_ACCESS_TOKEN, "")
     }
@@ -104,12 +85,5 @@ class SettingsRepositoryImpl @Inject constructor(
     override suspend fun getMessageBufferSize(): Int {
         val pref = prefsDao.getSetting(AppSetting.MESSAGES_BUFFER_SIZE.name)
         return pref?.value?.toInt() ?: 1
-    }
-
-    private fun getAppActiveStatus() {
-        CoroutineScope(Dispatchers.IO).launch {
-            val result = prefsDao.getSetting(Constants.IS_APP_ACTIVE)
-            _isAppActive.value = result?.value?.toBoolean() ?: false
-        }
     }
 }

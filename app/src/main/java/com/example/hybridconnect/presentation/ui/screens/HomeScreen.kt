@@ -66,7 +66,6 @@ fun HomeScreen(
     val scope = rememberCoroutineScope()
     val agentFirstName by viewModel.agentFirstName.collectAsState()
     val greetings by viewModel.greetings.collectAsState()
-    val isAppActive by viewModel.isAppActive.collectAsState()
     val appState by viewModel.appState.collectAsState()
     val isConnected by viewModel.isConnected.collectAsState()
     val connectedApps by viewModel.connectedApps.collectAsState()
@@ -131,7 +130,7 @@ fun HomeScreen(
                         ) {
                             Icon(
                                 imageVector = if (isConnected) Icons.Default.Wifi else Icons.Default.WifiOff,
-                                contentDescription = if (isAppActive) "Wifi Off" else "Wifi On",
+                                contentDescription = if (isConnected) "Wifi On" else "Wifi Off",
                                 tint = if (isConnected) Color.Green else MaterialTheme.colorScheme.error
                             )
                         }
@@ -176,14 +175,6 @@ fun HomeScreen(
                 }
             }
         }
-
-//        TestSendComponent(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .align(Alignment.BottomStart)
-//                .padding(start = 16.dp, bottom = 32.dp),
-//            onTestButtonClicked = { viewModel.testButtonClicked(it) }
-//        )
 
         Column(
             modifier = Modifier

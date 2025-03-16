@@ -1,13 +1,13 @@
 package com.example.hybridconnect.domain.services
 
-import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.telephony.SmsMessage
-import android.telephony.SubscriptionManager
-import com.example.hybridconnect.domain.repository.SettingsRepository
+import android.widget.Toast
+import com.example.hybridconnect.domain.enums.AppState
+import com.example.hybridconnect.domain.services.interfaces.AppControl
 import com.example.hybridconnect.domain.usecase.SubscriptionIdFetcherUseCase
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -15,7 +15,7 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class SmsBroadcastReceiver : BroadcastReceiver() {
     @Inject
-    lateinit var settingsRepository: SettingsRepository
+    lateinit var appControl: AppControl
 
     @Inject
     lateinit var subscriptionIdFetcherUseCase: SubscriptionIdFetcherUseCase
@@ -23,8 +23,24 @@ class SmsBroadcastReceiver : BroadcastReceiver() {
     private val messageParts = mutableMapOf<String, StringBuilder>()
 
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action == "android.provider.Telephony.SMS_RECEIVED") {
-            decodeSms(context, intent)
+        when (intent.action) {
+            "android.provider.Telephony.SMS_RECEIVED" -> {
+                Toast.makeText(context, "SMS Broadcast Received", Toast.LENGTH_SHORT).show()
+                decodeSms(context, intent)
+            }
+
+            "android.provider.Telephony.SMS_DELIVER" -> {
+                Toast.makeText(context, "SMS Deliver Broadcast Received", Toast.LENGTH_SHORT).show()
+            }
+
+            "android.provider.Telephony.WAP_PUSH_DELIVER" -> {
+                Toast.makeText(context, "WAP Push Broadcast Received", Toast.LENGTH_SHORT).show()
+                // Handle WAP Push message if needed
+            }
+
+            else -> {
+                Toast.makeText(context, "Unknown Broadcast Received", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -61,7 +77,9 @@ class SmsBroadcastReceiver : BroadcastReceiver() {
 
                 // Clean up the message parts map for this messageId
                 messageParts.remove(messageId)
-                if (settingsRepository.isAppActive()) {
+
+                if (appControl.appState.value != AppState.STATE_STOPPED) {
+                    Toast.makeText(context, "All done!", Toast.LENGTH_SHORT).show()
                     // start foreground service with SMS data
                     val serviceIntent = Intent(context, SmsProcessingService::class.java).apply {
                         putExtra("message", fullMessage)
@@ -69,8 +87,14 @@ class SmsBroadcastReceiver : BroadcastReceiver() {
                         putExtra("simSlot", simSlot)
                     }
                     context.startForegroundService(serviceIntent)
+                } else {
+                    Toast.makeText(context, "App Is Not Active", Toast.LENGTH_SHORT).show()
                 }
+            } else {
+                Toast.makeText(context, "Received PDU is null", Toast.LENGTH_SHORT).show()
             }
+        } else {
+            Toast.makeText(context, "Received Bundle is null", Toast.LENGTH_SHORT).show()
         }
     }
 }

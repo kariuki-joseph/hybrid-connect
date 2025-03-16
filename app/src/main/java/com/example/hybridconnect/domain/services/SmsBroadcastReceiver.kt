@@ -23,6 +23,8 @@ class SmsBroadcastReceiver : BroadcastReceiver() {
     private val messageParts = mutableMapOf<String, StringBuilder>()
 
     override fun onReceive(context: Context, intent: Intent) {
+        if (appControl.appState.value == AppState.STATE_STOPPED) return
+
         when (intent.action) {
             "android.provider.Telephony.SMS_RECEIVED" -> {
                 Toast.makeText(context, "SMS Broadcast Received", Toast.LENGTH_SHORT).show()
@@ -75,21 +77,19 @@ class SmsBroadcastReceiver : BroadcastReceiver() {
                 // After processing all parts, send the complete message
                 val fullMessage = messageParts[messageId].toString()
 
-                // Clean up the message parts map for this messageId
+                // Cleanup
                 messageParts.remove(messageId)
 
-                if (appControl.appState.value != AppState.STATE_STOPPED) {
-                    Toast.makeText(context, "All done!", Toast.LENGTH_SHORT).show()
-                    // start foreground service with SMS data
-                    val serviceIntent = Intent(context, SmsProcessingService::class.java).apply {
-                        putExtra("message", fullMessage)
-                        putExtra("sender", sender)
-                        putExtra("simSlot", simSlot)
-                    }
-                    context.startForegroundService(serviceIntent)
-                } else {
-                    Toast.makeText(context, "App Is Not Active", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "All done!", Toast.LENGTH_SHORT).show()
+                
+                val serviceIntent = Intent(context, SmsProcessingService::class.java).apply {
+                    putExtra("message", fullMessage)
+                    putExtra("sender", sender)
+                    putExtra("simSlot", simSlot)
                 }
+
+                context.startForegroundService(serviceIntent)
+
             } else {
                 Toast.makeText(context, "Received PDU is null", Toast.LENGTH_SHORT).show()
             }

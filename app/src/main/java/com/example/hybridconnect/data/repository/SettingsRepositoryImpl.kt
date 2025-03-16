@@ -76,14 +76,4 @@ class SettingsRepositoryImpl @Inject constructor(
             sharedPrefsManager.set(Constants.KEY_ACCESS_TOKEN, token)
         }
     }
-
-    override suspend fun getMaxUssdRetries(): Int {
-        val pref = prefsDao.getSetting(Constants.KEY_MAX_USSD_RETRIES)
-        return pref?.value?.toInt() ?: 3
-    }
-
-    override suspend fun getMessageBufferSize(): Int {
-        val pref = prefsDao.getSetting(AppSetting.MESSAGES_BUFFER_SIZE.name)
-        return pref?.value?.toInt() ?: 1
-    }
 }

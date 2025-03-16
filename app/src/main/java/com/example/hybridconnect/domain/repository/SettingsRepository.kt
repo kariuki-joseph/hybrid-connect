@@ -15,6 +15,4 @@ interface SettingsRepository {
     suspend fun getPaymentsSimCards(): List<SimCard>
     fun getAccessToken(): String
     suspend fun saveAccessToken(token: String)
-    suspend fun getMaxUssdRetries(): Int
-    suspend fun getMessageBufferSize(): Int
 }

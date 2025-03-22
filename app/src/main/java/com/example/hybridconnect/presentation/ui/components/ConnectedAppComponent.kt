@@ -83,7 +83,7 @@ fun ConnectedAppComponent(
                 )
 
                 Text(
-                    text = " Offers",
+                    text = " Offers Added",
                     style = MaterialTheme.typography.labelSmall
                 )
             }

@@ -44,7 +44,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.hybridconnect.domain.enums.AppState
@@ -73,6 +78,10 @@ fun HomeScreen(
     var showStopAppWarningDialog by remember { mutableStateOf(false) }
     val logoutSuccess by viewModel.logoutSuccess.collectAsState()
     val snackbarMessage by viewModel.snackbarMessage.collectAsState()
+   val pendingMessagesCount: Int = transactionStatusCounts.values
+       .flatMap { it.entries }
+       .filter { it.key == TransactionStatus.PENDING }
+       .sumOf { it.value }
 
 
     LaunchedEffect(logoutSuccess) {
@@ -150,6 +159,30 @@ fun HomeScreen(
                     }
                 }
 
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                ) {
+                    Text(
+                        text = buildAnnotatedString {
+                            withStyle(
+                                style = SpanStyle(
+                                    fontWeight = FontWeight.Bold
+                                )
+                            ) {
+                                append("$pendingMessagesCount")
+                            }
+
+                            withStyle(style = SpanStyle(
+                                fontSize = 12.sp
+                            )){
+                                append(" Pending Messages")
+                            }
+                        },
+                    )
+                }
                 Spacer(modifier = Modifier.height(8.dp))
                 LazyColumn(
                     modifier = Modifier
@@ -159,7 +192,9 @@ fun HomeScreen(
                 ) {
                     items(connectedApps) { app ->
                         val offersCount = connectedOffersCount[app.connectId] ?: 0
-                        val appTransactionStatusCounts:Map<TransactionStatus, Int> = transactionStatusCounts[app.connectId] ?: emptyMap<TransactionStatus, Int>()
+                        val appTransactionStatusCounts: Map<TransactionStatus, Int> =
+                            transactionStatusCounts[app.connectId]
+                                ?: emptyMap<TransactionStatus, Int>()
                         ConnectedAppComponent(
                             connectedApp = app,
                             transactionStatusCounts = appTransactionStatusCounts,

@@ -8,6 +8,7 @@ import com.example.hybridconnect.domain.enums.AppState
 import com.example.hybridconnect.domain.model.Agent
 import com.example.hybridconnect.domain.model.ConnectedApp
 import com.example.hybridconnect.domain.model.Transaction
+import com.example.hybridconnect.domain.model.TransactionStatusCount
 import com.example.hybridconnect.domain.repository.AuthRepository
 import com.example.hybridconnect.domain.repository.ConnectedAppRepository
 import com.example.hybridconnect.domain.repository.SettingsRepository
@@ -15,6 +16,7 @@ import com.example.hybridconnect.domain.repository.TransactionRepository
 import com.example.hybridconnect.domain.services.SocketService
 import com.example.hybridconnect.domain.services.interfaces.AppControl
 import com.example.hybridconnect.domain.usecase.LogoutUserUseCase
+import com.example.hybridconnect.domain.enums.TransactionStatus
 import com.example.hybridconnect.domain.usecase.RetryUnforwardedTransactionsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -23,6 +25,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -69,6 +72,15 @@ class HomeViewModel @Inject constructor(
 
     val transactionQueue: StateFlow<List<Transaction>> = transactionRepository.transactionQueueFlow
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), emptyList())
+
+    val transactionStatusCounts: StateFlow<Map<String?, Map<TransactionStatus, Int>>> = transactionRepository.getTransactionStatusCounts()
+        .map { list ->
+            list.groupBy { it.appId }
+                .mapValues { entry ->
+                    entry.value.associate { it.status to it.count }
+                }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), emptyMap())
 
     private val _connectedOffersCount = MutableStateFlow<Map<String, Int>>(emptyMap())
     val connectedOffersCount: StateFlow<Map<String, Int>> = _connectedOffersCount.asStateFlow()

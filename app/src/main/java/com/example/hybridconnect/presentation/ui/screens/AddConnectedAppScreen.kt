@@ -75,7 +75,7 @@ fun AddConnectedAppScreen(
     LaunchedEffect(connectSuccess) {
         if (connectSuccess){
             SnackbarManager.showMessage(scope, "App connected successfully")
-            delay(2000)
+            delay(1000)
             viewModel.resetConnectSuccess()
             navController.popBackStack()
 

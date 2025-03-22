@@ -13,7 +13,7 @@ import com.example.hybridconnect.domain.utils.getColorForTransactionStatus
 
 @Composable
 private fun Dot(
-    transactionStatus: TransactionStatus = TransactionStatus.OK
+    transactionStatus: TransactionStatus = TransactionStatus.PENDING
     ) {
     val color = getColorForTransactionStatus(transactionStatus)
     Box(

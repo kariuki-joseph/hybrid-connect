@@ -13,5 +13,7 @@ fun Transaction.toEntity(): TransactionEntity {
         offerId = this.offer?.id,
         createdAt = this.createdAt,
         isForwarded = this.isForwarded,
+        appId = this.app?.connectId,
+        isDeleted = this.isDeleted,
     )
 }

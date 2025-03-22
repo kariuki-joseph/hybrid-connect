@@ -26,7 +26,7 @@ import com.example.hybridconnect.data.local.entity.TransactionEntity
         ConnectedAppEntity::class,
         AppOfferEntity::class
     ],
-    version = 6,
+    version = 7,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 1, to = 2), // Offers
@@ -37,7 +37,8 @@ import com.example.hybridconnect.data.local.entity.TransactionEntity
             to = 5,
             spec = Migration_4_5::class
         ),  //     Adding 'mpesaCode' column in transactions
-        AutoMigration(from = 5, to = 6) // transaction amount and status
+        AutoMigration(from = 5, to = 6), // transaction amount and status
+        AutoMigration(from = 6, to = 7), // associate each transaction with an app
     ]
 )
 abstract class AppDatabase : RoomDatabase() {

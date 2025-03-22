@@ -2,9 +2,9 @@ package com.example.hybridconnect.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.hybridconnect.domain.enums.TransactionStatus
 import com.example.hybridconnect.domain.model.ConnectedApp
 import com.example.hybridconnect.domain.model.Offer
-import com.example.hybridconnect.domain.model.Transaction
 import com.example.hybridconnect.domain.repository.ConnectedAppRepository
 import com.example.hybridconnect.domain.repository.OfferRepository
 import com.example.hybridconnect.domain.repository.TransactionRepository
@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -32,20 +33,20 @@ class AppDetailsViewModel @Inject constructor(
     private val _availableOffers = MutableStateFlow<List<Offer>>(emptyList())
     val availableOffers: StateFlow<List<Offer>> = _availableOffers.asStateFlow()
 
-    private val _selectedOffers = MutableStateFlow<Set<UUID>>(emptySet())
-    val selectedOffers: StateFlow<Set<UUID>> = _selectedOffers.asStateFlow()
-
     private val _connectedOffers = MutableStateFlow<Set<UUID>>(emptySet())
     val connectedOffers: StateFlow<Set<UUID>> = _connectedOffers
 
     private val _snackbarMessage = MutableStateFlow<String?>(null)
     val snackbarMessage: StateFlow<String?> = _snackbarMessage
 
-    private val _isDeletingApp = MutableStateFlow(false)
-    val isDeletingApp: StateFlow<Boolean> = _isDeletingApp.asStateFlow()
-
-    val transactionQueue: StateFlow<List<Transaction>> = transactionRepository.transactionQueueFlow
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), emptyList())
+    val transactionStatusCounts: StateFlow<Map<String?, Map<TransactionStatus, Int>>> = transactionRepository.getTransactionStatusCounts()
+        .map { list ->
+            list.groupBy { it.appId }
+                .mapValues { entry ->
+                    entry.value.associate { it.status to it.count }
+                }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), emptyMap())
 
     fun loadConnectedApp(connectId: String) {
         viewModelScope.launch {
@@ -90,13 +91,10 @@ class AppDetailsViewModel @Inject constructor(
         val app = _connectedApp.value ?: return
         viewModelScope.launch {
             try {
-                _isDeletingApp.value = true
                 connectedAppRepository.deleteConnectedApp(app)
-                _snackbarMessage.value = "App deleted succesfully"
+                _snackbarMessage.value = "App deleted successfully"
             } catch (e: Exception) {
                 _snackbarMessage.value = e.message.toString()
-            } finally {
-                _isDeletingApp.value = false
             }
         }
     }

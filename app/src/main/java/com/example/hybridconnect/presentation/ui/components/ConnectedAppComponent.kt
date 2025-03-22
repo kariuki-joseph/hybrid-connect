@@ -28,15 +28,19 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.hybridconnect.domain.enums.TransactionStatus
 import com.example.hybridconnect.domain.model.ConnectedApp
 
 @Composable
 fun ConnectedAppComponent(
     connectedApp: ConnectedApp,
-    queueSize: Int,
+    transactionStatusCounts: Map<TransactionStatus, Int>,
     connectedOffersCount: Int = 0,
     onClick: () -> Unit,
 ) {
+    val sentCount = transactionStatusCounts[TransactionStatus.SENT] ?: 0
+    val receivedCount = transactionStatusCounts[TransactionStatus.RECEIVED] ?: 0
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -79,7 +83,7 @@ fun ConnectedAppComponent(
                 )
 
                 Text(
-                    text = " Offers",
+                    text = " Offers Added",
                     style = MaterialTheme.typography.labelSmall
                 )
             }
@@ -96,7 +100,7 @@ fun ConnectedAppComponent(
                                 fontWeight = FontWeight.Bold
                             )
                         ) {
-                            append(queueSize.toString())
+                            append("$sentCount")
                         }
                         append(" --> ")
                         withStyle(
@@ -104,7 +108,7 @@ fun ConnectedAppComponent(
                                 fontWeight = FontWeight.Bold,
                             )
                         ) {
-                            append(connectedApp.messagesSent.toString())
+                            append("$receivedCount")
                         }
                         append(" Sent")
                     },
@@ -139,9 +143,13 @@ private fun ConnectedAppComponentPreview() {
         messagesSent = 30,
     )
 
+    val transactionStatusCounts = mapOf<TransactionStatus, Int>(
+        TransactionStatus.RECEIVED to 2
+    )
+
     ConnectedAppComponent(
         connectedApp = connectedApp,
-        queueSize = 10,
+        transactionStatusCounts = transactionStatusCounts,
         connectedOffersCount = 30,
         onClick = {}
     )

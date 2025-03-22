@@ -66,7 +66,7 @@ class MessageForwardingService : Service() {
 
     private suspend fun processTransactions() {
         while (true) {
-            if(appControl.appState.value != AppState.STATE_RUNNING){
+            if (appControl.appState.value != AppState.STATE_RUNNING) {
                 break
             }
 
@@ -82,7 +82,6 @@ class MessageForwardingService : Service() {
 
             try {
                 sendWebsocketMessage(transaction)
-                updateTransactionUseCase(transaction.copy(isForwarded = true))
             } catch (e: UnavailableOfferException) {
                 Log.e(TAG, e.message.toString())
             } catch (e: Exception) {
@@ -122,7 +121,7 @@ class MessageForwardingService : Service() {
         }
 
         socketService.sendMessageToApp(selectedApp, transaction.mpesaMessage)
-        connectedAppRepository.incrementMessagesSent(selectedApp)
+        updateTransactionUseCase(transaction.copy(app = selectedApp))
 
         // Update round-robin index per offer
         transaction.offer?.let { offer ->

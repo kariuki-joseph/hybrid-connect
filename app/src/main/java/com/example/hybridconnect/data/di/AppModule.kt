@@ -154,6 +154,6 @@ object AppModule {
         transactionDao: TransactionDao,
         offerRepository: OfferRepository,
     ): TransactionRepository {
-        return TransactionRepositoryImpl(transactionDao, offerRepository)
+        return TransactionRepositoryImpl(transactionDao)
     }
 }

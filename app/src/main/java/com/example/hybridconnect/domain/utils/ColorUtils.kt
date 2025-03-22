@@ -8,7 +8,8 @@ import com.example.hybridconnect.domain.enums.TransactionStatus
 @Composable
 fun getColorForTransactionStatus(transactionStatus: TransactionStatus): Color {
     return when (transactionStatus) {
-        TransactionStatus.OK -> Color.Green
-        TransactionStatus.UNMATCHED -> MaterialTheme.colorScheme.secondary
+        TransactionStatus.PENDING -> Color.Yellow
+        TransactionStatus.SENT -> Color.Gray
+        TransactionStatus.RECEIVED -> Color.Green
     }
 }

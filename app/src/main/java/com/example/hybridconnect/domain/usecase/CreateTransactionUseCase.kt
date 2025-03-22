@@ -35,7 +35,7 @@ class CreateTransactionUseCase @Inject constructor(
                 mpesaCode = sms.mpesaCode,
                 amount = offer?.price ?: sms.amount,
                 mpesaMessage = sms.message,
-                status = if (offer == null) TransactionStatus.UNMATCHED else TransactionStatus.OK,
+                status = TransactionStatus.PENDING,
                 offer = offer,
             )
 

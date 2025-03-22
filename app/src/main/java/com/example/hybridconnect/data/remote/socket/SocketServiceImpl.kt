@@ -3,11 +3,14 @@ package com.example.hybridconnect.data.remote.socket
 import android.util.Log
 import com.example.hybridconnect.domain.enums.AppSetting
 import com.example.hybridconnect.domain.enums.SocketEvent
+import com.example.hybridconnect.domain.enums.TransactionStatus
 import com.example.hybridconnect.domain.model.ConnectedApp
 import com.example.hybridconnect.domain.repository.ConnectedAppRepository
 import com.example.hybridconnect.domain.repository.SettingsRepository
+import com.example.hybridconnect.domain.repository.TransactionRepository
 import com.example.hybridconnect.domain.services.SocketService
 import com.example.hybridconnect.domain.usecase.RetryUnforwardedTransactionsUseCase
+import com.example.hybridconnect.domain.usecase.UpdateTransactionUseCase
 import io.socket.client.IO
 import io.socket.client.Socket
 import kotlinx.coroutines.CoroutineScope
@@ -24,7 +27,9 @@ class SocketServiceImpl(
     private val serverUrl: String,
     private val settingsRepository: SettingsRepository,
     private val connectedAppRepository: ConnectedAppRepository,
-    private val retryUnforwardedTransactionsUseCase: RetryUnforwardedTransactionsUseCase
+    private val transactionRepository: TransactionRepository,
+    private val updateTransactionUseCase: UpdateTransactionUseCase,
+    private val retryUnforwardedTransactionsUseCase: RetryUnforwardedTransactionsUseCase,
 ) : SocketService {
     private lateinit var socket: Socket
     private val eventListeners = mutableMapOf<String, (List<Any>) -> Unit>()
@@ -65,7 +70,9 @@ class SocketServiceImpl(
                 }
 
                 registerOnlineStatusListeners()
+                registerTransactionAckListeners()
                 registerDynamicEventListeners()
+                registerAnyEventListener()
                 socket.connect()
             } catch (e: Exception) {
                 Log.e(TAG, e.message, e)
@@ -85,6 +92,8 @@ class SocketServiceImpl(
             message.put("connectId", app.connectId)
             message.put("message", data)
             socket.emit(SocketEvent.EVENT_SEND_MESSAGE.name, message)
+        } else {
+            throw Exception("Could not send message. Socket has not been initialized")
         }
     }
 
@@ -148,6 +157,45 @@ class SocketServiceImpl(
         CoroutineScope(Dispatchers.IO).launch {
             connectedAppRepository.updateOnlineStatus(connectId, true)
             retryUnforwardedTransactionsUseCase()
+        }
+    }
+
+    private fun registerTransactionAckListeners() {
+        socket.on(SocketEvent.EVENT_MESSAGE_SENT.name, ::onTransactionSent)
+        socket.on(SocketEvent.EVENT_ACK_MESSAGE.name, ::onTransactionReceived)
+    }
+
+    private fun onTransactionSent(args: Array<Any>) {
+        val mpesaCode = args.getOrNull(0) as? String ?: return
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val transaction = transactionRepository.getTransactionByMpesaCode(mpesaCode)
+                    ?: throw Exception("No transaction with M-Pesa code $mpesaCode was found")
+
+                updateTransactionUseCase(transaction.copy(status = TransactionStatus.SENT))
+            } catch (e: Exception) {
+                Log.d(TAG, e.message.toString())
+            }
+        }
+    }
+
+    private fun onTransactionReceived(args: Array<Any>) {
+        val mpesaCode = args.getOrNull(0) as? String ?: return
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val transaction = transactionRepository.getTransactionByMpesaCode(mpesaCode)
+                    ?: throw Exception("No transaction with M-Pesa code $mpesaCode was found")
+
+                updateTransactionUseCase(transaction.copy(status = TransactionStatus.RECEIVED))
+            } catch (e: Exception) {
+                Log.d(TAG, e.message.toString())
+            }
+        }
+    }
+
+    private fun registerAnyEventListener() {
+        socket.onAnyIncoming { args ->
+            Log.d(TAG, "Event: ${args.joinToString()}")
         }
     }
 }

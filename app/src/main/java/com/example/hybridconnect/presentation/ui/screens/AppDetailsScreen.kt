@@ -1,6 +1,5 @@
 package com.example.hybridconnect.presentation.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,10 +10,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
@@ -48,6 +45,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.hybridconnect.domain.enums.OfferType
+import com.example.hybridconnect.domain.enums.TransactionStatus
 import com.example.hybridconnect.domain.model.ConnectedApp
 import com.example.hybridconnect.domain.model.Offer
 import com.example.hybridconnect.domain.utils.SnackbarManager
@@ -58,7 +56,6 @@ import java.util.UUID
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppDetailsScreen(
-    modifier: Modifier = Modifier,
     navController: NavHostController,
     viewModel: AppDetailsViewModel = hiltViewModel(),
     connectId: String,
@@ -68,8 +65,7 @@ fun AppDetailsScreen(
     val availableOffers by viewModel.availableOffers.collectAsState()
     val connectedOffers by viewModel.connectedOffers.collectAsState()
     val snackbarMessage by viewModel.snackbarMessage.collectAsState()
-    val isDeletingApp by viewModel.isDeletingApp.collectAsState()
-    val transactionQueue by viewModel.transactionQueue.collectAsState()
+    val transactionStatusCounts by viewModel.transactionStatusCounts.collectAsState()
 
     var showConfirmDeleteAppDialog by remember { mutableStateOf(false) }
 
@@ -105,9 +101,10 @@ fun AppDetailsScreen(
                 .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
             connectedApp?.let { app ->
+                val appTransactionStatusCounts = transactionStatusCounts[app.connectId] ?: emptyMap()
                 AppDetailsScreenContent(
                     connectedApp = app,
-                    queueSize = transactionQueue.size,
+                    transactionStatusCounts = appTransactionStatusCounts,
                     availableOffers = availableOffers,
                     connectedOffers = connectedOffers,
                     onOfferSelectionChange = { offerId, isSelected ->
@@ -153,7 +150,7 @@ fun AppDetailsScreen(
 @Composable
 private fun AppDetailsScreenContent(
     connectedApp: ConnectedApp,
-    queueSize: Int,
+    transactionStatusCounts: Map<TransactionStatus, Int>,
     availableOffers: List<Offer>,
     connectedOffers: Set<UUID>,
     onOfferSelectionChange: (UUID, Boolean) -> Unit,
@@ -164,6 +161,9 @@ private fun AppDetailsScreenContent(
         OfferType.SMS to "SMS Offers",
         OfferType.VOICE to "Minute Offers"
     )
+
+    val sentCount = transactionStatusCounts[TransactionStatus.SENT] ?: 0
+    val receivedCount = transactionStatusCounts[TransactionStatus.RECEIVED] ?: 0
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -207,7 +207,7 @@ private fun AppDetailsScreenContent(
                             fontWeight = FontWeight.Bold
                         )
                     ) {
-                        append(queueSize.toString())
+                        append("$sentCount")
                     }
                     append(" Pending, ")
                     withStyle(
@@ -215,7 +215,7 @@ private fun AppDetailsScreenContent(
                             fontWeight = FontWeight.Bold,
                         )
                     ) {
-                        append(connectedApp.messagesSent.toString())
+                        append("$receivedCount")
                     }
                     append(" Sent")
                 },
@@ -321,19 +321,6 @@ private fun AppDetailsScreenContent(
 }
 
 
-@Composable
-private fun Dot(
-    isOnline: Boolean = false,
-) {
-    val color = if (isOnline) Color.Green else MaterialTheme.colorScheme.error
-    Box(
-        modifier = Modifier
-            .size(10.dp)
-            .background(color, CircleShape)
-    )
-}
-
-
 @Preview(showBackground = true)
 @Composable
 private fun AppDetailsScreenPreview() {
@@ -352,9 +339,13 @@ private fun AppDetailsScreenPreview() {
 
     val connectedOffers = remember { mutableSetOf(availableOffers[0].id) }
 
+    val transactionStatusCounts = mapOf(
+        TransactionStatus.SENT to 30,
+        TransactionStatus.RECEIVED to 10
+    )
     AppDetailsScreenContent(
         connectedApp = connectedApp,
-        queueSize = 15,
+        transactionStatusCounts = transactionStatusCounts,
         availableOffers = availableOffers,
         connectedOffers = connectedOffers,
         onOfferSelectionChange = { offerId, isSelected ->

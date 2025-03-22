@@ -100,7 +100,6 @@ fun NavGraph(
         }
         composable(Route.Home.name) {
             HomeScreen(
-                modifier = Modifier,
                 navController = navController
             )
         }

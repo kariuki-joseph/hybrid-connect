@@ -18,6 +18,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -36,6 +37,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.example.hybridconnect.domain.enums.LoadingState
 import com.example.hybridconnect.presentation.ui.components.CustomButton
 import com.example.hybridconnect.presentation.viewmodel.ForwardMessagesViewModel
 import kotlinx.coroutines.Dispatchers
@@ -51,6 +53,7 @@ fun ForwardMessagesScreen(
 ) {
     val scope = rememberCoroutineScope()
     val mpesaMessages by viewModel.mpesaMessages.collectAsState()
+    val loadingState by viewModel.loadingState.collectAsState()
     var messageCount by remember { mutableStateOf(TextFieldValue("500")) }
 
     Scaffold(
@@ -87,7 +90,7 @@ fun ForwardMessagesScreen(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceAround,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Bottom
             ) {
                 TextField(
                     value = messageCount,
@@ -100,11 +103,20 @@ fun ForwardMessagesScreen(
                     onClick = {
                         viewModel.loadMpesaMessages(messageCount.text.toIntOrNull() ?: 500)
                     },
+                    enabled = if (loadingState == LoadingState.Loading) false else true
                 ) {
-                    Text("Load")
+                    Text(
+                        text = when (loadingState) {
+                            LoadingState.Loading -> "Loading..."
+                            else -> "Load"
+                        },
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
 
             Text("M-Pesa Messages")
@@ -114,15 +126,16 @@ fun ForwardMessagesScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                            .padding(horizontal = 16.dp, vertical = 4.dp ),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.Top
                     ) {
                         Text(
                             text = message.message,
                             modifier = Modifier.weight(1f),
                             style = MaterialTheme.typography.bodySmall
                         )
-                        Button(
+                        OutlinedButton(
                             onClick = {
                                 viewModel.sendMessage(message)
                                 viewModel.removeMessage(message)
